@@ -1001,6 +1001,7 @@ class CamcopsRequest(Request):
             language = self.user.language
             if language:
                 return language
+
         # Fallback to default
         return self.config.language
 
