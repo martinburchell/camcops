@@ -22,11 +22,10 @@
 // ============================================================================
 
 #include "widgetfunc.h"
-#include "common/cssconst.h"
-#include "lib/css.h"
 
 #include <QByteArray>
 #include <QColor>
+#include <QDebug>
 #include <QLayout>
 #include <QLayoutItem>
 #include <QPlainTextEdit>
@@ -36,6 +35,9 @@
 #include <QVariant>
 #include <QWidget>
 
+#include "common/cssconst.h"
+#include "lib/css.h"
+
 namespace widgetfunc {
 
 void setBackgroundColour(QWidget* widget, const QColor& colour)
@@ -43,7 +45,7 @@ void setBackgroundColour(QWidget* widget, const QColor& colour)
     // https://wiki.qt.io/How_to_Change_the_Background_Color_of_QWidget
 
     // Palette method not working. (Conflict with stylesheet?)
-    // http://doc.qt.io/qt-5/qwidget.html#autoFillBackground-prop
+    // https://doc.qt.io/qt-6.5/qwidget.html#autoFillBackground-prop
     //
     // QPalette palette(widget->palette());
     // palette.setColor(QPalette::Background, Qt::red);
@@ -55,25 +57,24 @@ void setBackgroundColour(QWidget* widget, const QColor& colour)
 
     // See also:
     // https://stackoverflow.com/questions/25466030/make-qwidget-transparent
-    // http://doc.qt.io/qt-5/qwidget.html#transparency-and-double-buffering
-
+    // https://doc.qt.io/qt-6.5/qwidget.html#transparency-and-double-buffering
 }
 
-
-void setBackgroundAndPressedColour(QWidget* widget,
-                                   const QColor& background,
-                                   const QColor& pressed)
+void setBackgroundAndPressedColour(
+    QWidget* widget, const QColor& background, const QColor& pressed
+)
 {
     // untested
-    widget->setStyleSheet(QString(
-        "QWidget {"
-        "  background-color: %1;"
-        "}"
-        "QWidget:pressed {"
-        "  background-color: %1;"
-        "}").arg(css::colourCss(background), css::colourCss(pressed)));
+    widget->setStyleSheet(
+        QString("QWidget {"
+                "  background-color: %1;"
+                "}"
+                "QWidget:pressed {"
+                "  background-color: %1;"
+                "}")
+            .arg(css::colourCss(background), css::colourCss(pressed))
+    );
 }
-
 
 void removeAllChildWidgets(QObject* object)
 {
@@ -92,19 +93,16 @@ void removeAllChildWidgets(QObject* object)
     // http://stackoverflow.com/questions/4065378/qt-get-children-from-layout
 }
 
+const Qt::Alignment HALIGN_MASK
+    = (Qt::AlignLeft | Qt::AlignRight | Qt::AlignHCenter | Qt::AlignJustify);
+const Qt::Alignment VALIGN_MASK
+    = (Qt::AlignTop | Qt::AlignBottom | Qt::AlignVCenter | Qt::AlignBaseline);
 
-const Qt::Alignment HALIGN_MASK = (Qt::AlignLeft | Qt::AlignRight |
-                                   Qt::AlignHCenter | Qt::AlignJustify);
-const Qt::Alignment VALIGN_MASK = (Qt::AlignTop | Qt::AlignBottom |
-                                   Qt::AlignVCenter | Qt::AlignBaseline);
-
-
-Qt::Alignment combineAlignment(const Qt::Alignment halign,
-                               const Qt::Alignment valign)
+Qt::Alignment
+    combineAlignment(const Qt::Alignment halign, const Qt::Alignment valign)
 {
     return (halign & HALIGN_MASK) | (valign & VALIGN_MASK);
 }
-
 
 void repolish(QWidget* widget)
 {
@@ -116,9 +114,12 @@ void repolish(QWidget* widget)
     widget->update();
 }
 
-
-void setProperty(QWidget* widget, const QString& property,
-                 const QVariant& value, const bool repolish_afterwards)
+void setProperty(
+    QWidget* widget,
+    const QString& property,
+    const QVariant& value,
+    const bool repolish_afterwards
+)
 {
     if (!widget) {
         qWarning() << Q_FUNC_INFO << "- ignored for null widget";
@@ -132,27 +133,26 @@ void setProperty(QWidget* widget, const QString& property,
     }
 }
 
-
 QString cssBoolean(const bool value)
 {
     return value ? cssconst::VALUE_TRUE : cssconst::VALUE_FALSE;
 }
 
-
 void setPropertyItalic(QWidget* widget, const bool italic, const bool repolish)
 {
-    setProperty(widget, cssconst::PROPERTY_ITALIC, cssBoolean(italic),
-                repolish);
+    setProperty(
+        widget, cssconst::PROPERTY_ITALIC, cssBoolean(italic), repolish
+    );
 }
 
-
-void setPropertyMissing(QWidget* widget,
-                        const bool missing, const bool repolish)
+void setPropertyMissing(
+    QWidget* widget, const bool missing, const bool repolish
+)
 {
-    setProperty(widget, cssconst::PROPERTY_MISSING, cssBoolean(missing),
-                repolish);
+    setProperty(
+        widget, cssconst::PROPERTY_MISSING, cssBoolean(missing), repolish
+    );
 }
-
 
 void clearLayout(QLayout* layout, bool delete_widgets)
 {
@@ -191,7 +191,6 @@ void clearLayout(QLayout* layout, bool delete_widgets)
     layout->invalidate();
 }
 
-
 void scrollToEnd(QPlainTextEdit* editor)
 {
     QScrollBar* vsb = editor->verticalScrollBar();
@@ -203,7 +202,6 @@ void scrollToEnd(QPlainTextEdit* editor)
         hsb->setValue(0);
     }
 }
-
 
 void scrollToStart(QPlainTextEdit* editor)
 {
@@ -217,7 +215,6 @@ void scrollToStart(QPlainTextEdit* editor)
     }
 }
 
-
 /*
 bool isScrollAtEnd(QPlainTextEdit* editor)
 {
@@ -226,4 +223,4 @@ bool isScrollAtEnd(QPlainTextEdit* editor)
 }
 */
 
-} // namespace widgetfunc
+}  // namespace widgetfunc

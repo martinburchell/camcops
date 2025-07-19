@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_validators.py
 
@@ -159,7 +157,7 @@ def describe_regex_permitted_char(
         elif i + 1 < length and content[i + 1] == "-":
             # range like A-Z
             assert i + 2 < length, f"Bad range specification in {expression!r}"
-            permitted.append(content[i : i + 3])  # noqa: E203
+            permitted.append(content[i : i + 3])
             i += 3
         else:
             char = content[i]
@@ -310,7 +308,7 @@ def validate_human_name(
 
     This is hard. See
     https://stackoverflow.com/questions/888838/regular-expression-for-validating-names-and-surnames
-    """  # noqa
+    """
     validate_by_char_and_length(
         x,
         permitted_char_expression=HUMAN_NAME_CHAR_UNICODE,
@@ -356,6 +354,7 @@ def validate_restricted_sql_search_literal(
 # -----------------------------------------------------------------------------
 # Level 4. Infinitely worrying.
 # -----------------------------------------------------------------------------
+
 
 # noinspection PyUnusedLocal
 def validate_anything(x: str, req: Optional["CamcopsRequest"] = None) -> None:
@@ -429,7 +428,7 @@ def validate_ip_address(
 
 # Per https://mathiasbynens.be/demo/url-regex, using @stephenhay's regex but
 # restricted further.
-VALID_REDIRECT_URL_REGEX = re.compile(r"^https?://[^\s/$.?#].[^\s]*$")
+VALID_REDIRECT_URL_REGEX = re.compile(r"^https?://[^\s/$.?#].\S*$")
 
 
 def validate_any_url(url: str, req: Optional["CamcopsRequest"] = None) -> None:
@@ -647,7 +646,7 @@ def validate_task_tablename(
 # Filenames
 # -----------------------------------------------------------------------------
 
-DOWNLOAD_FILENAME_REGEX = re.compile(r"\w[\w-]*.[\w]+")
+DOWNLOAD_FILENAME_REGEX = re.compile(r"\w[\w-]*.\w+")
 # \w is equivalent to [A-Za-z0-9_]; see https://regexr.com/
 
 

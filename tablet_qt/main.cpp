@@ -22,28 +22,39 @@
 
 #define FULL_LOG_FORMAT  // Include time and thread ID.
 // #define DISABLE_ANDROID_NATIVE_DIALOGS  // For a bug fixed in Qt 5.2.1.
-// #define QT_OPENGL_IN_SOFTWARE  // Unnecessary once proper OpenGL detection added.
+// #define QT_OPENGL_IN_SOFTWARE
+// ... Unnecessary once proper OpenGL detection added.
+// #define DEBUG_WITH_DIAGNOSTIC_STYLE
+
 
 #include <QApplication>
 #include <QDebug>
 #include <QPushButton>
 #include <QStyleFactory>
-#include "common/preprocessor_aid.h"
+
+#include "common/preprocessor_aid.h"  // IWYU pragma: keep
 #include "core/camcopsapp.h"
-#include "crypto/cryptofunc.h"
+#ifdef OPENSSL_VIA_QLIBRARY
+    #include "crypto/cryptofunc.h"
+#endif
+#ifdef DEBUG_WITH_DIAGNOSTIC_STYLE
+    #include "lib/diagnosticstyle.h"
+#endif
 
 #ifdef FULL_LOG_FORMAT
     #ifdef QT_DEBUG
-        const QString message_pattern(
-            "camcops[%{threadid}]: %{time yyyy-MM-ddTHH:mm:ss.zzz}"
-            ": %{type}: %{file}(%{line}): %{message}");
+const QString message_pattern(
+    "camcops[%{threadid}]: %{time yyyy-MM-ddTHH:mm:ss.zzz}"
+    ": %{type}: %{file}(%{line}): %{message}"
+);
     #else
-        const QString message_pattern(
-            "camcops[%{threadid}]: %{time yyyy-MM-ddTHH:mm:ss.zzz}"
-            ": %{type}: %{message}");
+const QString message_pattern(
+    "camcops[%{threadid}]: %{time yyyy-MM-ddTHH:mm:ss.zzz}"
+    ": %{type}: %{message}"
+);
     #endif
 #else
-    const QString message_pattern("camcops: %{type}: %{message}");
+const QString message_pattern("camcops: %{type}: %{message}");
 #endif
 
 
@@ -64,7 +75,7 @@ VISIBLE_SYMBOL int main(int argc, char* argv[])
     NOTE: argc must be passed to the QApplication as a REFERENCE to int, or the
     app will crash. See
     - https://bugreports.qt.io/browse/QTBUG-5637
-    - http://doc.qt.io/qt-5/qapplication.html
+    - https://doc.qt.io/qt-6.5/qapplication.html
     */
 
 #ifdef DEBUG_TEST_BASIC_QT_ONLY
@@ -76,35 +87,41 @@ VISIBLE_SYMBOL int main(int argc, char* argv[])
     // Qt environment variables
     // ========================================================================
 
-#ifdef DISABLE_ANDROID_NATIVE_DIALOGS
+    // Can switch media backend here from default ("ffmpeg" on most platforms)
+    // https://doc.qt.io/qt-6.5/qtmultimedia-index.html#changing-backends
+    // qputenv("QT_MEDIA_BACKEND", "android");
+
+    #ifdef DISABLE_ANDROID_NATIVE_DIALOGS
     // To fix a message box bug: https://bugreports.qt.io/browse/QTBUG-35313
     qputenv("QT_USE_ANDROID_NATIVE_DIALOGS", "0");
-    // ... read by QAndroidPlatformTheme::usePlatformNativeDialog in qandroidplatformtheme.cpp
-#endif
+        // ... read by QAndroidPlatformTheme::usePlatformNativeDialog in
+        //     qandroidplatformtheme.cpp
+    #endif
 
-#ifdef QT_OPENGL_IN_SOFTWARE
-    // To fix a crash when opening the camera system of
-    // "fatal: unknown(0): Failed to create OpenGL context for format QSurfaceFormat"
-    // ... see https://bugreports.qt.io/browse/QTBUG-47540
+    #ifdef QT_OPENGL_IN_SOFTWARE
+        // To fix a crash when opening the camera system of
+        // "fatal: unknown(0): Failed to create OpenGL context for format
+        //      QSurfaceFormat"
+        // ... see https://bugreports.qt.io/browse/QTBUG-47540
 
-    // Set OpenGL to use software rendering:
-    // qputenv("QT_OPENGL", "software");  // doesn't fix it
+        // Set OpenGL to use software rendering:
+        // qputenv("QT_OPENGL", "software");  // doesn't fix it
 
-    // Show Qt scenegraph information:
-    // qputenv("QSG_INFO", "1");  // doesn't seem to do much
+        // Show Qt scenegraph information:
+        // qputenv("QSG_INFO", "1");  // doesn't seem to do much
 
-    // Also try:
-    // $ ~/dev/qt_local_build/qt_linux_x86_64_install/bin/qtdiag
-    // ... which might say "Unable to create an Open GL context."
+        // Also try:
+        // $ ~/dev/qt_local_build/qt_linux_x86_64_install/bin/qtdiag
+        // ... which might say "Unable to create an Open GL context."
 
-    // See also:
-    // - https://stackoverflow.com/questions/41021681/qt-how-to-detect-which-version-of-opengl-is-being-used
-    // - https://blog.qt.io/blog/2017/01/18/opengl-implementation-qt-quick-app-using-today/
+        // See also:
+        // - https://stackoverflow.com/questions/41021681/qt-how-to-detect-which-version-of-opengl-is-being-used
+        // - https://blog.qt.io/blog/2017/01/18/opengl-implementation-qt-quick-app-using-today/
 
-    // THE UPSHOT: I needed (1) to reboot my computer, and (2) to make CamCOPS
-    // check for OpenGL, rather than just crashing if it wasn't present.
-    // See QuPhoto.
-#endif
+        // THE UPSHOT: I needed (1) to reboot my computer, and (2) to make
+        // CamCOPS check for OpenGL, rather than just crashing if it wasn't
+        // present. See QuPhoto.
+    #endif
 
     // ========================================================================
     // Qt style preamble
@@ -119,8 +136,15 @@ VISIBLE_SYMBOL int main(int argc, char* argv[])
         created. See https://bugreports.qt.io/browse/QTBUG-45517
     */
 
+    #ifdef DEBUG_WITH_DIAGNOSTIC_STYLE
+    // Overlay widgets with bounding box and class name
+    auto style = new DiagnosticStyle();
+    #else
     QStyle* style = QStyleFactory::create("Fusion");
+    #endif
+
     // QProxyStyle* proxy_style = new TreeViewProxyStyle(style);
+
     QApplication::setStyle(style);
     // ... https://stackoverflow.com/questions/41184723/i-want-qt-app-to-look-like-qt-app-rather-than-android-native
 
@@ -136,9 +160,9 @@ VISIBLE_SYMBOL int main(int argc, char* argv[])
     // ========================================================================
 
     CamcopsApp app(argc, argv);
-#ifdef OPENSSL_VIA_QLIBRARY
+    #ifdef OPENSSL_VIA_QLIBRARY
     cryptofunc::ensureAllCryptoFunctionsLoaded();
-#endif
+    #endif
     return app.run();
 
 #endif

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/core10.py
 
@@ -28,11 +26,12 @@ camcops_server/tasks/core10.py
 """
 
 import logging
-from typing import Dict, List, Optional, Type
+from typing import cast, Dict, List, Optional, Type
 
 from cardinal_pythonlib.classes import classproperty
 from cardinal_pythonlib.stringfunc import strseq
 from semantic_version import Version
+from sqlalchemy.orm import Mapped
 from sqlalchemy.sql.sqltypes import Integer
 
 from camcops_server.cc_modules.cc_constants import CssClass
@@ -45,7 +44,7 @@ from camcops_server.cc_modules.cc_report import (
 from camcops_server.cc_modules.cc_request import CamcopsRequest
 from camcops_server.cc_modules.cc_snomed import SnomedExpression, SnomedLookup
 from camcops_server.cc_modules.cc_sqla_coltypes import (
-    CamcopsColumn,
+    mapped_camcops_column,
     ZERO_TO_FOUR_CHECKER,
 )
 from camcops_server.cc_modules.cc_summaryelement import SummaryElement
@@ -67,7 +66,7 @@ log = logging.getLogger(__name__)
 # =============================================================================
 
 
-class Core10(TaskHasPatientMixin, Task):
+class Core10(TaskHasPatientMixin, Task):  # type: ignore[misc]
     """
     Server implementation of the CORE-10 task.
     """
@@ -79,63 +78,43 @@ class Core10(TaskHasPatientMixin, Task):
     COMMENT_NORMAL = " (0 not at all - 4 most or all of the time)"
     COMMENT_REVERSED = " (0 most or all of the time - 4 not at all)"
 
-    q1 = CamcopsColumn(
-        "q1",
-        Integer,
+    q1: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q1 (tension/anxiety)" + COMMENT_NORMAL,
     )
-    q2 = CamcopsColumn(
-        "q2",
-        Integer,
+    q2: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q2 (support)" + COMMENT_REVERSED,
     )
-    q3 = CamcopsColumn(
-        "q3",
-        Integer,
+    q3: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q3 (coping)" + COMMENT_REVERSED,
     )
-    q4 = CamcopsColumn(
-        "q4",
-        Integer,
+    q4: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q4 (talking is too much)" + COMMENT_NORMAL,
     )
-    q5 = CamcopsColumn(
-        "q5",
-        Integer,
+    q5: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q5 (panic)" + COMMENT_NORMAL,
     )
-    q6 = CamcopsColumn(
-        "q6",
-        Integer,
+    q6: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q6 (suicidality)" + COMMENT_NORMAL,
     )
-    q7 = CamcopsColumn(
-        "q7",
-        Integer,
+    q7: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q7 (sleep problems)" + COMMENT_NORMAL,
     )
-    q8 = CamcopsColumn(
-        "q8",
-        Integer,
+    q8: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q8 (despair/hopelessness)" + COMMENT_NORMAL,
     )
-    q9 = CamcopsColumn(
-        "q9",
-        Integer,
+    q9: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q9 (unhappy)" + COMMENT_NORMAL,
     )
-    q10 = CamcopsColumn(
-        "q10",
-        Integer,
+    q10: Mapped[Optional[int]] = mapped_camcops_column(
         permitted_value_checker=ZERO_TO_FOUR_CHECKER,
         comment="Q10 (unwanted images)" + COMMENT_NORMAL,
     )
@@ -204,7 +183,7 @@ class Core10(TaskHasPatientMixin, Task):
         ]
 
     def total_score(self) -> int:
-        return self.sum_fields(self.QUESTION_FIELDNAMES)
+        return cast(int, self.sum_fields(self.QUESTION_FIELDNAMES))
 
     def n_questions_complete(self) -> int:
         return self.n_fields_not_none(self.QUESTION_FIELDNAMES)
@@ -322,7 +301,7 @@ class Core10Report(AverageScoreReport):
         return [
             ScoreDetails(
                 name=_("CORE-10 clinical score"),
-                scorefunc=Core10.clinical_score,
+                scorefunc=Core10.clinical_score,  # type: ignore[arg-type]
                 minimum=0,
                 maximum=Core10.MAX_SCORE,
                 higher_score_is_better=False,

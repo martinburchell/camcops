@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_all_models.py
 
@@ -122,7 +120,7 @@ from camcops_server.cc_modules.cc_user import (
 # We need something equivalent to "from tasks.phq9 import Phq9".
 
 # noinspection PyUnresolvedReferences
-from camcops_server.tasks import *  # see tasks/__init__.py  # noqa: F401,F403
+from camcops_server.tasks import *  # see tasks/__init__.py  # noqa: F401, F403
 
 # -----------------------------------------------------------------------------
 # Other report imports
@@ -207,8 +205,8 @@ for __orm_class in gen_orm_classes_from_base(Base):  # type: Type[Base]
             if __tablename.startswith("_"):
                 pass
             # noinspection PyUnresolvedReferences
-            __table = __orm_class.__table__  # type: Table
-            CLIENT_TABLE_MAP[__tablename] = __table
+            __table = __orm_class.__table__  # type: ignore[assignment]
+            CLIENT_TABLE_MAP[__tablename] = __table  # type: ignore[assignment]
             if not issubclass(__orm_class, Task):
                 NONTASK_CLIENT_TABLENAMES.append(__tablename)
 NONTASK_CLIENT_TABLENAMES.sort()

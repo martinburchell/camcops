@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0059_basdai_comments.py
 
@@ -57,8 +55,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("basdai", schema=None) as batch_op:
         batch_op.alter_column(
             "q1",
@@ -121,7 +120,7 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table("basdai", schema=None) as batch_op:
         batch_op.alter_column(
             "q6",

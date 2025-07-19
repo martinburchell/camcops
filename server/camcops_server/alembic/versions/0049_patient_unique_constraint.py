@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0049_patient_unique_constraint.py
 
@@ -54,8 +52,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     pass
     # One might think that we want records to be unique by id [within a
     # client's database] and _device_id/_era [defining a moment on a client's
@@ -81,7 +80,7 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     pass
     # with op.batch_alter_table('patient', schema=None) as batch_op:
     #     batch_op.drop_constraint(batch_op.f('uq_patient_id'), type_='unique')

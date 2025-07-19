@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/tests/cc_task_tests.py
 
@@ -36,6 +34,7 @@ from pendulum import Date, DateTime as Pendulum
 
 from camcops_server.cc_modules.cc_dummy_database import DummyDataInserter
 from camcops_server.cc_modules.cc_task import Task
+from camcops_server.cc_modules.cc_testfactories import UserFactory
 from camcops_server.cc_modules.cc_unittest import DemoDatabaseTestCase
 from camcops_server.cc_modules.cc_validators import validate_task_tablename
 
@@ -48,9 +47,6 @@ log = BraceStyleAdapter(logging.getLogger(__name__))
 
 
 class TaskTests(DemoDatabaseTestCase):
-    """
-    Unit tests.
-    """
 
     def test_query_phq9(self) -> None:
         self.announce("test_query_phq9")
@@ -65,21 +61,26 @@ class TaskTests(DemoDatabaseTestCase):
         from datetime import date
         import hl7
         from sqlalchemy.sql.schema import Column
-        from camcops_server.cc_modules.cc_ctvinfo import CtvInfo  # noqa: F811
-        from camcops_server.cc_modules.cc_patient import Patient  # noqa: F811
-        from camcops_server.cc_modules.cc_simpleobjects import IdNumReference
-        from camcops_server.cc_modules.cc_snomed import (  # noqa: F811
+        from camcops_server.cc_modules.cc_ctvinfo import CtvInfo
+        from camcops_server.cc_modules.cc_patient import Patient
+        from camcops_server.cc_modules.cc_simpleobjects import (
+            IdNumReference,
+            TaskExportOptions,
+        )
+        from camcops_server.cc_modules.cc_snomed import (
             SnomedExpression,
         )
         from camcops_server.cc_modules.cc_string import APPSTRING_TASKNAME
         from camcops_server.cc_modules.cc_summaryelement import SummaryElement
-        from camcops_server.cc_modules.cc_trackerhelpers import (  # noqa: F811
+        from camcops_server.cc_modules.cc_trackerhelpers import (
             TrackerInfo,
         )
-        from camcops_server.cc_modules.cc_spreadsheet import (  # noqa: F811
+        from camcops_server.cc_modules.cc_spreadsheet import (
             SpreadsheetPage,
         )
         from camcops_server.cc_modules.cc_xml import XmlElement
+
+        user = UserFactory()
 
         subclasses = Task.all_subclasses_by_tablename()
         tables = [cls.tablename for cls in subclasses]
@@ -89,6 +90,16 @@ class TaskTests(DemoDatabaseTestCase):
         dummy_data_factory = DummyDataInserter()
         task_doc_root = os.path.join(
             Path(__file__).resolve().parents[4], "docs", "source", "tasks"
+        )
+        export_options = TaskExportOptions(
+            include_blobs=True,
+            xml_include_ancillary=True,
+            xml_include_calculated=True,
+            xml_include_comments=True,
+            xml_include_patient=True,
+            xml_include_plain_columns=True,
+            xml_include_snomed=True,
+            xml_with_header_comments=True,
         )
         for cls in subclasses:
             log.info("Testing {}", cls)
@@ -129,9 +140,7 @@ class TaskTests(DemoDatabaseTestCase):
             for fn in t.get_blob_fields():
                 self.assertIsInstance(fn, str)
 
-            self.assertIsInstance(
-                t.pk, int
-            )  # all our examples do have PKs  # noqa
+            self.assertIsInstance(t.pk, int)  # all our examples do have PKs
             self.assertIsInstance(t.is_preserved(), bool)
             self.assertIsInstance(t.was_forcibly_preserved(), bool)
             self.assertIsInstanceOrNone(t.get_creation_datetime(), Pendulum)
@@ -209,7 +218,7 @@ class TaskTests(DemoDatabaseTestCase):
             # Views
             for page in t.get_spreadsheet_pages(req):
                 self.assertIsInstance(page.get_tsv(), str)
-            self.assertIsInstance(t.get_xml(req), str)
+            self.assertIsInstance(t.get_xml(req, export_options), str)
             self.assertIsInstance(t.get_html(req), str)
             self.assertIsInstance(t.get_pdf(req), bytes)
             self.assertIsInstance(t.get_pdf_html(req), str)
@@ -218,7 +227,7 @@ class TaskTests(DemoDatabaseTestCase):
                 t.get_rio_metadata(
                     req,
                     which_idnum=1,
-                    uploading_user_id=self.user.id,
+                    uploading_user_id=user.id,
                     document_type="some_doc_type",
                 ),
                 str,

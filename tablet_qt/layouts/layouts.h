@@ -18,23 +18,31 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
-#include "common/gui_defines.h"
+#include "common/gui_defines.h"  // IWYU pragma: keep
 
 // Choose which layout system we will use. (GUI_USE_HFW_LAYOUT is better.)
 
 #ifdef GUI_USE_HFW_LAYOUT
-#include "layouts/gridlayouthfw.h"
-#include "layouts/hboxlayouthfw.h"
-#include "layouts/vboxlayouthfw.h"
+    #include "layouts/gridlayouthfw.h"
+    #include "layouts/hboxlayouthfw.h"
+    #include "layouts/vboxlayouthfw.h"
 using GridLayout = GridLayoutHfw;
 using HBoxLayout = HBoxLayoutHfw;
 using VBoxLayout = VBoxLayoutHfw;
 #else
-#include <QGridLayout>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+    #include <QGridLayout>
+    #include <QHBoxLayout>
+    #include <QVBoxLayout>
 using GridLayout = QGridLayout;
 using HBoxLayout = QHBoxLayout;
 using VBoxLayout = QVBoxLayout;

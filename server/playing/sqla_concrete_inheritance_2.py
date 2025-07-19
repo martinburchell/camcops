@@ -28,6 +28,7 @@ playing/sqla_concrete_inheritance_2.py
 **Test SQLAlchemy inheritance.**
 
 """
+
 # https://stackoverflow.com/questions/26724897/adjacency-list-abstract-base-class-inheritance-used-in-relationship
 
 from sqlalchemy import Column, String, Integer, create_engine, Float
@@ -35,8 +36,8 @@ from sqlalchemy.orm import configure_mappers, Session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.declarative import declared_attr, AbstractConcreteBase
 from camcops_server.cc_modules.cc_sqla_coltypes import (
-    BoolColumn,
-    CamcopsColumn,
+    bool_column,
+    camcops_column,
 )
 
 
@@ -55,8 +56,8 @@ class TreeNode(AbstractConcreteBase, Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     if WITH_CAMCOPS_COLUMNS:
-        counter = CamcopsColumn("counter", Integer)
-        flipswitch = BoolColumn("flipswitch")
+        counter = camcops_column("counter", Integer)
+        flipswitch = bool_column("flipswitch")
 
     @declared_attr
     def __mapper_args__(cls):

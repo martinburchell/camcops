@@ -31,7 +31,7 @@ Install with
     qApp->installEventFilter(new ShootABug());
 
 That should filter events for the entire application:
-    http://doc.qt.io/qt-5.7/eventsandfilters.html
+    https://doc.qt.io/qt-6.5/eventsandfilters.html
     ... "such global event filters are called before the object-specific
     filters"
 
@@ -48,6 +48,7 @@ class ShootABug : public QObject
     // Object that can report debugging information, given a debug build of Qt.
 
     Q_OBJECT
+
 public:
     bool eventFilter(QObject* recv, QEvent* event);
 };

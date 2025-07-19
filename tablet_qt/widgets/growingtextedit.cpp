@@ -20,19 +20,21 @@
 
 #include "growingtextedit.h"
 
-
 GrowingTextEdit::GrowingTextEdit(QWidget* parent) :
     QTextEdit(parent),
     m_auto_resize(true)
 {
-    connect(document(), &QTextDocument::contentsChanged,
-            this, &GrowingTextEdit::contentsChanged);
+    connect(
+        document(),
+        &QTextDocument::contentsChanged,
+        this,
+        &GrowingTextEdit::contentsChanged
+    );
 
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
-
 
 GrowingTextEdit::GrowingTextEdit(const QString& text, QWidget* parent) :
     GrowingTextEdit(parent)  // delegating constructor
@@ -40,17 +42,14 @@ GrowingTextEdit::GrowingTextEdit(const QString& text, QWidget* parent) :
     setText(text);
 }
 
-
 GrowingTextEdit::~GrowingTextEdit()
 {
 }
-
 
 void GrowingTextEdit::setAutoResize(const bool auto_resize)
 {
     m_auto_resize = auto_resize;
 }
-
 
 QSize GrowingTextEdit::sizeHint() const
 {
@@ -65,7 +64,6 @@ QSize GrowingTextEdit::sizeHint() const
     return size_hint;
 }
 
-
 QSize GrowingTextEdit::minimumSizeHint() const
 {
     // Implementing this reduces to a satisfactory level (though doesn't
@@ -79,7 +77,6 @@ QSize GrowingTextEdit::minimumSizeHint() const
     return minsize;
 }
 
-
 void GrowingTextEdit::contentsChanged()
 {
     // qDebug() << Q_FUNC_INFO;
@@ -90,7 +87,7 @@ void GrowingTextEdit::contentsChanged()
 // The final piece of the puzzle is that the Questionnaire's scroll area
 // needs to resize itself when the widget sizes change.
 // That requires:
-//      http://doc.qt.io/qt-5.7/qscrollarea.html#widgetResizable-prop
+//      https://doc.qt.io/qt-6.5/qscrollarea.html#widgetResizable-prop
 // ... and (in VerticalScrollArea) a call to updateGeometry() when its widget
 // size changes, it seems.
 // ... no, calling updateGeometry() from VerticalScrollArea::resizeEvent is

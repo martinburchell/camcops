@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_request.py
 
@@ -46,7 +44,6 @@ from typing import (
     Set,
     Tuple,
     TYPE_CHECKING,
-    Union,
 )
 import urllib.parse
 
@@ -152,9 +149,6 @@ if TYPE_CHECKING:
     from matplotlib.axes import Axes
     from matplotlib.text import Text
     from camcops_server.cc_modules.cc_exportrecipient import ExportRecipient
-    from camcops_server.cc_modules.cc_exportrecipientinfo import (
-        ExportRecipientInfo,
-    )
     from camcops_server.cc_modules.cc_session import CamcopsSession
     from camcops_server.cc_modules.cc_snomed import SnomedConcept
 
@@ -218,7 +212,7 @@ class CamcopsRequest(Request):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """
         This is called as the Pyramid request factory; see
         ``config.set_request_factory(CamcopsRequest)``
@@ -286,7 +280,7 @@ class CamcopsRequest(Request):
 
         And for how to make one:
         https://stackoverflow.com/questions/5590170/what-is-the-standard-method-for-generating-a-nonce-in-python
-        """  # noqa
+        """
         return secrets.token_urlsafe()
 
     # -------------------------------------------------------------------------
@@ -512,7 +506,7 @@ class CamcopsRequest(Request):
             CamcopsSession,
         )  # delayed import
 
-        ts = TabletSession(self)
+        ts = TabletSession(self)  # may raise UserErrorException
         new_cc_session = CamcopsSession.get_session_for_tablet(ts)
         # ... does login
         self.replace_camcops_session(new_cc_session)
@@ -1333,7 +1327,7 @@ class CamcopsRequest(Request):
         self.provide_png_fallback_for_svg = provide_png_fallback
 
     @staticmethod
-    def create_figure(**kwargs) -> Figure:
+    def create_figure(**kwargs: Any) -> Figure:
         """
         Creates and returns a :class:`matplotlib.figure.Figure` with a canvas.
         The canvas will be available as ``fig.canvas``.
@@ -1462,7 +1456,7 @@ class CamcopsRequest(Request):
 
           - 50% grey colour and on the bottom.
 
-        """  # noqa
+        """
         fontsize = self.config.plot_fontsize
         return dict(
             family="sans-serif",
@@ -1787,7 +1781,7 @@ class CamcopsRequest(Request):
         all_push_recipients: bool = False,
         save: bool = True,
         database_versions: bool = True,
-    ) -> List[Union["ExportRecipient", "ExportRecipientInfo"]]:
+    ) -> List["ExportRecipient"]:
         """
         Returns a list of export recipients, with some filtering if desired.
         Validates them against the database.
@@ -1876,7 +1870,7 @@ class CamcopsRequest(Request):
 
         # Convert to SQLAlchemy ORM ExportRecipient objects:
         recipients = [
-            ExportRecipient(x) for x in recipientinfolist
+            ExportRecipient(other=x) for x in recipientinfolist
         ]  # type: List[ExportRecipient]
 
         final_recipients = []  # type: List[ExportRecipient]
@@ -2542,8 +2536,5 @@ def get_unittest_request(
     req.set_get_params(params)
 
     req._debugging_db_session = dbsession
-    user = User()
-    user.superuser = True
-    req._debugging_user = user
 
     return req

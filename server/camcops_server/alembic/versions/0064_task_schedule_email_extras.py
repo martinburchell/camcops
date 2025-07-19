@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0064_task_schedule_email_extras.py
 
@@ -57,8 +55,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("_task_schedule", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -89,7 +88,7 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table("_task_schedule", schema=None) as batch_op:
         batch_op.drop_column("email_from")
         batch_op.drop_column("email_cc")

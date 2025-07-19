@@ -18,14 +18,22 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 #include <QRect>
 #include <QSize>
 class QLayout;
 class QWidget;
 
-
-class Margins {
+class Margins
+{
     // Generic margin structure, because QRect isn't quite right for this,
     // passing around lots of separate integers is awkward and prone to
     // mis-ordering [was that getContentsMargins(&left, &top, &right, &bottom)
@@ -55,10 +63,25 @@ public:
     bool isZero() const;
 
     // Return components:
-    inline int left() const { return m_left; }
-    inline int top() const { return m_top; }
-    inline int right() const { return m_right; }
-    inline int bottom() const { return m_bottom; }
+    inline int left() const
+    {
+        return m_left;
+    }
+
+    inline int top() const
+    {
+        return m_top;
+    }
+
+    inline int right() const
+    {
+        return m_right;
+    }
+
+    inline int bottom() const
+    {
+        return m_bottom;
+    }
 
     // Set components, and call rationalize():
     void setLeft(int width);

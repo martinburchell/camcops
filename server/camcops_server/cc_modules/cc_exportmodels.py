@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_exportmodels.py
 
@@ -29,13 +27,14 @@ camcops_server/cc_modules/cc_exportmodels.py
 
 """
 
+import datetime
 import logging
 import os
 import posixpath
 import socket
 import subprocess
 import sys
-from typing import Generator, List, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Generator, List, Optional, Tuple, TYPE_CHECKING
 
 from cardinal_pythonlib.datetimefunc import (
     get_now_utc_datetime,
@@ -52,13 +51,16 @@ from cardinal_pythonlib.sqlalchemy.list_types import StringListType
 from cardinal_pythonlib.sqlalchemy.orm_query import bool_from_exists_clause
 import hl7
 from pendulum import DateTime as Pendulum
-from sqlalchemy.orm import reconstructor, relationship, Session as SqlASession
-from sqlalchemy.sql.schema import Column, ForeignKey
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    reconstructor,
+    relationship,
+    Session as SqlASession,
+)
+from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import (
     BigInteger,
-    Boolean,
-    DateTime,
-    Integer,
     Text,
     UnicodeText,
 )
@@ -218,74 +220,63 @@ class ExportedTask(Base):
 
     __tablename__ = "_exported_tasks"
 
-    id = Column(
-        "id",
+    id: Mapped[int] = mapped_column(
         BigInteger,
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
-    recipient_id = Column(
-        "recipient_id",
+    recipient_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportRecipient.id),
-        nullable=False,
         comment=f"FK to {ExportRecipient.__tablename__}.{ExportRecipient.id.name}",  # noqa
     )
-    basetable = Column(
-        "basetable",
+    basetable: Mapped[str] = mapped_column(
         TableNameColType,
-        nullable=False,
         index=True,
         comment="Base table of task concerned",
     )
-    task_server_pk = Column(
-        "task_server_pk",
-        Integer,
-        nullable=False,
+    task_server_pk: Mapped[int] = mapped_column(
         index=True,
         comment="Server PK of task in basetable (_pk field)",
     )
-    start_at_utc = Column(
-        "start_at_utc",
-        DateTime,
-        nullable=False,
+    start_at_utc: Mapped[datetime.datetime] = mapped_column(
         index=True,
         comment="Time export was started (UTC)",
     )
-    finish_at_utc = Column(
-        "finish_at_utc", DateTime, comment="Time export was finished (UTC)"
+    finish_at_utc: Mapped[Optional[datetime.datetime]] = mapped_column(
+        comment="Time export was finished (UTC)"
     )
-    success = Column(
-        "success",
-        Boolean,
+    success: Mapped[bool] = mapped_column(
         default=False,
-        nullable=False,
         comment="Task exported successfully?",
     )
-    failure_reasons = Column(
+    failure_reasons: Mapped[Optional[List[str]]] = mapped_column(
         "failure_reasons", StringListType, comment="Reasons for failure"
     )
-    cancelled = Column(
-        "cancelled",
-        Boolean,
+    cancelled: Mapped[bool] = mapped_column(
         default=False,
-        nullable=False,
         comment="Export subsequently cancelled/invalidated (may trigger resend)",  # noqa
     )
-    cancelled_at_utc = Column(
-        "cancelled_at_utc",
-        DateTime,
+    cancelled_at_utc: Mapped[Optional[datetime.datetime]] = mapped_column(
         comment="Time export was cancelled at (UTC)",
     )
 
     recipient = relationship(ExportRecipient)
 
-    emails = relationship("ExportedTaskEmail")
-    fhir_exports = relationship("ExportedTaskFhir")
-    filegroups = relationship("ExportedTaskFileGroup")
-    hl7_messages = relationship("ExportedTaskHL7Message")
-    redcap_exports = relationship("ExportedTaskRedcap")
+    emails = relationship("ExportedTaskEmail", back_populates="exported_task")
+    fhir_exports = relationship(
+        "ExportedTaskFhir", back_populates="exported_task"
+    )
+    filegroups = relationship(
+        "ExportedTaskFileGroup", back_populates="exported_task"
+    )
+    hl7_messages = relationship(
+        "ExportedTaskHL7Message", back_populates="exported_task"
+    )
+    redcap_exports = relationship(
+        "ExportedTaskRedcap", back_populates="exported_task"
+    )
 
     def __init__(
         self,
@@ -293,8 +284,7 @@ class ExportedTask(Base):
         task: "Task" = None,
         basetable: str = None,
         task_server_pk: int = None,
-        *args,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """
         Can initialize with a task, or a basetable/task_server_pk combination.
@@ -308,7 +298,7 @@ class ExportedTask(Base):
         (However, we must also support a no-parameter constructor, not least
         for our :func:`merge_db` function.)
         """  # noqa
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.recipient = recipient
         self.start_at_utc = get_now_utc_datetime()
         if task:
@@ -323,7 +313,7 @@ class ExportedTask(Base):
         else:
             self.basetable = basetable
             self.task_server_pk = task_server_pk
-            self._task = None  # type: Optional[Task]
+            self._task = None
 
     @reconstructor
     def init_on_load(self) -> None:
@@ -331,7 +321,7 @@ class ExportedTask(Base):
         Called when SQLAlchemy recreates an object; see
         https://docs.sqlalchemy.org/en/latest/orm/constructors.html.
         """
-        self._task = None  # type: Optional[Task]
+        self._task = None
 
     @property
     def task(self) -> "Task":
@@ -541,47 +531,46 @@ class ExportedTaskHL7Message(Base):
 
     __tablename__ = "_exported_task_hl7msg"
 
-    id = Column(
-        "id",
+    id: Mapped[int] = mapped_column(
         BigInteger,
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
-    exported_task_id = Column(
-        "exported_task_id",
+    exported_task_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportedTask.id),
-        nullable=False,
         comment=f"FK to {ExportedTask.__tablename__}.{ExportedTask.id.name}",
     )
-    sent_at_utc = Column(
-        "sent_at_utc", DateTime, comment="Time message was sent at (UTC)"
+    sent_at_utc: Mapped[Optional[datetime.datetime]] = mapped_column(
+        comment="Time message was sent at (UTC)"
     )
-    reply_at_utc = Column(
-        "reply_at_utc", DateTime, comment="Time message was replied to (UTC)"
+    reply_at_utc: Mapped[Optional[datetime.datetime]] = mapped_column(
+        comment="Time message was replied to (UTC)"
     )
-    success = Column(
-        "success",
-        Boolean,
+    success: Mapped[Optional[bool]] = mapped_column(
         comment="Message sent successfully and acknowledged by HL7 server",
     )
-    failure_reason = Column(
-        "failure_reason", Text, comment="Reason for failure"
+    failure_reason: Mapped[Optional[str]] = mapped_column(
+        Text, comment="Reason for failure"
     )
-    message = Column("message", LongText, comment="Message body, if kept")
-    reply = Column("reply", Text, comment="Server's reply, if kept")
+    message: Mapped[Optional[str]] = mapped_column(
+        LongText, comment="Message body, if kept"
+    )
+    reply: Mapped[Optional[str]] = mapped_column(
+        Text, comment="Server's reply, if kept"
+    )
 
     exported_task = relationship(ExportedTask)
 
     def __init__(
-        self, exported_task: ExportedTask = None, *args, **kwargs
+        self, exported_task: ExportedTask = None, **kwargs: Any
     ) -> None:
         """
         Must support parameter-free construction, not least for
         :func:`merge_db`.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
         self.exported_task = exported_task
 
         self._hl7_msg = None  # type: Optional[hl7.Message]
@@ -843,51 +832,41 @@ class ExportedTaskFileGroup(Base):
 
     __tablename__ = "_exported_task_filegroup"
 
-    id = Column(
-        "id",
+    id: Mapped[int] = mapped_column(
         BigInteger,
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
-    exported_task_id = Column(
-        "exported_task_id",
+    exported_task_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportedTask.id),
-        nullable=False,
         comment=f"FK to {ExportedTask.__tablename__}.{ExportedTask.id.name}",
     )
-    filenames = Column(
-        "filenames", StringListType, comment="List of filenames exported"
+    filenames: Mapped[Optional[List[str]]] = mapped_column(
+        StringListType, comment="List of filenames exported"
     )
-    script_called = Column(
-        "script_called",
-        Boolean,
+    script_called: Mapped[bool] = mapped_column(
         default=False,
-        nullable=False,
         comment=(
             f"Was the {ConfigParamExportRecipient.FILE_SCRIPT_AFTER_EXPORT} "
             f"script called?"
         ),
     )
-    script_retcode = Column(
-        "script_retcode",
-        Integer,
+    script_retcode: Mapped[Optional[int]] = mapped_column(
         comment=(
             f"Return code from the "
             f"{ConfigParamExportRecipient.FILE_SCRIPT_AFTER_EXPORT} script"
         ),
     )
-    script_stdout = Column(
-        "script_stdout",
+    script_stdout: Mapped[Optional[str]] = mapped_column(
         UnicodeText,
         comment=(
             f"stdout from the "
             f"{ConfigParamExportRecipient.FILE_SCRIPT_AFTER_EXPORT} script"
         ),
     )
-    script_stderr = Column(
-        "script_stderr",
+    script_stderr: Mapped[Optional[str]] = mapped_column(
         UnicodeText,
         comment=(
             f"stderr from the "
@@ -897,11 +876,14 @@ class ExportedTaskFileGroup(Base):
 
     exported_task = relationship(ExportedTask)
 
-    def __init__(self, exported_task: ExportedTask = None) -> None:
+    def __init__(
+        self, exported_task: ExportedTask = None, **kwargs: Any
+    ) -> None:
         """
         Args:
             exported_task: :class:`ExportedTask` object
         """
+        super().__init__(**kwargs)
         self.exported_task = exported_task
 
     def export_file(
@@ -910,7 +892,7 @@ class ExportedTaskFileGroup(Base):
         text: str = None,
         binary: bytes = None,
         text_encoding: str = UTF8,
-    ) -> False:
+    ) -> bool:
         """
         Exports the file.
 
@@ -1098,22 +1080,18 @@ class ExportedTaskEmail(Base):
 
     __tablename__ = "_exported_task_email"
 
-    id = Column(
-        "id",
+    id: Mapped[int] = mapped_column(
         BigInteger,
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
-    exported_task_id = Column(
-        "exported_task_id",
+    exported_task_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportedTask.id),
-        nullable=False,
         comment=f"FK to {ExportedTask.__tablename__}.{ExportedTask.id.name}",
     )
-    email_id = Column(
-        "email_id",
+    email_id: Mapped[Optional[int]] = mapped_column(
         BigInteger,
         ForeignKey(Email.id),
         comment=f"FK to {Email.__tablename__}.{Email.id.name}",
@@ -1122,11 +1100,14 @@ class ExportedTaskEmail(Base):
     exported_task = relationship(ExportedTask)
     email = relationship(Email)
 
-    def __init__(self, exported_task: ExportedTask = None) -> None:
+    def __init__(
+        self, exported_task: ExportedTask = None, **kwargs: Any
+    ) -> None:
         """
         Args:
             exported_task: :class:`ExportedTask` object
         """
+        super().__init__(**kwargs)
         self.exported_task = exported_task
 
     def export_task(self, req: "CamcopsRequest") -> None:
@@ -1200,26 +1181,21 @@ class ExportedTaskRedcap(Base):
 
     __tablename__ = "_exported_task_redcap"
 
-    id = Column(
-        "id",
-        Integer,
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
-    exported_task_id = Column(
-        "exported_task_id",
+    exported_task_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportedTask.id),
-        nullable=False,
         comment=f"FK to {ExportedTask.__tablename__}.{ExportedTask.id.name}",
     )
 
     exported_task = relationship(ExportedTask)
 
     # We store these just as an audit trail
-    redcap_record_id = Column(
-        "redcap_record_id",
+    redcap_record_id: Mapped[Optional[int]] = mapped_column(
         UnicodeText,
         comment=(
             "ID of the (patient) record on the REDCap instance where "
@@ -1227,8 +1203,7 @@ class ExportedTaskRedcap(Base):
         ),
     )
 
-    redcap_instrument_name = Column(
-        "redcap_instrument_name",
+    redcap_instrument_name: Mapped[Optional[str]] = mapped_column(
         UnicodeText,
         comment=(
             "The name of the REDCap instrument name (form) where this "
@@ -1236,20 +1211,21 @@ class ExportedTaskRedcap(Base):
         ),
     )
 
-    redcap_instance_id = Column(
-        "redcap_instance_id",
-        Integer,
+    redcap_instance_id: Mapped[Optional[int]] = mapped_column(
         comment=(
             "1-based index of this particular task within the patient "
             "record. Increments on every repeat attempt."
         ),
     )
 
-    def __init__(self, exported_task: ExportedTask = None) -> None:
+    def __init__(
+        self, exported_task: ExportedTask = None, **kwargs: Any
+    ) -> None:
         """
         Args:
             exported_task: :class:`ExportedTask` object
         """
+        super().__init__(**kwargs)
         self.exported_task = exported_task
 
     def export_task(self, req: "CamcopsRequest") -> None:
@@ -1281,31 +1257,32 @@ class ExportedTaskFhir(Base):
 
     __tablename__ = "_exported_task_fhir"
 
-    id = Column(
-        "id",
-        Integer,
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
 
-    exported_task_id = Column(
-        "exported_task_id",
+    exported_task_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey(ExportedTask.id),
-        nullable=False,
         comment=f"FK to {ExportedTask.__tablename__}.{ExportedTask.id.name}",
     )
 
     exported_task = relationship(ExportedTask)
 
-    entries = relationship("ExportedTaskFhirEntry")
+    entries = relationship(
+        "ExportedTaskFhirEntry", back_populates="exported_task_fhir"
+    )
 
-    def __init__(self, exported_task: ExportedTask = None) -> None:
+    def __init__(
+        self, exported_task: ExportedTask = None, **kwargs: Any
+    ) -> None:
         """
         Args:
             exported_task: :class:`ExportedTask` object
         """
+        super().__init__(**kwargs)
         self.exported_task = exported_task
 
     def export_task(self, req: "CamcopsRequest") -> None:
@@ -1333,40 +1310,34 @@ class ExportedTaskFhirEntry(Base):
 
     __tablename__ = "_exported_task_fhir_entry"
 
-    id = Column(
-        "id",
-        Integer,
+    id: Mapped[int] = mapped_column(
         primary_key=True,
         autoincrement=True,
         comment="Arbitrary primary key",
     )
 
-    exported_task_fhir_id = Column(
-        "exported_task_fhir_id",
-        Integer,
+    exported_task_fhir_id: Mapped[int] = mapped_column(
         ForeignKey(ExportedTaskFhir.id),
-        nullable=False,
         comment="FK to {}.{}".format(
             ExportedTaskFhir.__tablename__, ExportedTaskFhir.id.name
         ),
     )
 
-    etag = Column(
-        "etag", UnicodeText, comment="The ETag for the resource (if relevant)"
+    etag: Mapped[Optional[str]] = mapped_column(
+        UnicodeText, comment="The ETag for the resource (if relevant)"
     )
 
-    last_modified = Column(
-        "last_modified", DateTime, comment="Server's date/time modified."
+    last_modified: Mapped[Optional[datetime.datetime]] = mapped_column(
+        comment="Server's date/time modified."
     )
 
-    location = Column(
-        "location",
+    location: Mapped[Optional[str]] = mapped_column(
         UnicodeText,
         comment="The location (if the operation returns a location).",
     )
 
-    status = Column(
-        "status", UnicodeText, comment="Status response code (text optional)."
+    status: Mapped[Optional[str]] = mapped_column(
+        UnicodeText, comment="Status response code (text optional)."
     )
 
     # TODO: outcome?

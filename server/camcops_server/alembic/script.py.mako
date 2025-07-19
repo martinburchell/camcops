@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/${ up_revision }.py
 
@@ -61,10 +59,10 @@ depends_on = ${ repr(depends_on) }
 # =============================================================================
 
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     ${ upgrades if upgrades else "pass" }
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     ${ downgrades if downgrades else "pass" }

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_tracker.py
 
@@ -67,13 +65,13 @@ import matplotlib.dates  # delayed until after the cc_plot import
 
 if TYPE_CHECKING:
     from camcops_server.cc_modules.cc_patient import Patient  # noqa: F401
-    from camcops_server.cc_modules.cc_patientidnum import (  # noqa: F401
+    from camcops_server.cc_modules.cc_patientidnum import (
         PatientIdNum,
     )
-    from camcops_server.cc_modules.cc_request import (  # noqa: F401
+    from camcops_server.cc_modules.cc_request import (
         CamcopsRequest,
     )
-    from camcops_server.cc_modules.cc_trackerhelpers import (  # noqa: F401
+    from camcops_server.cc_modules.cc_trackerhelpers import (
         TrackerInfo,
     )
 
@@ -184,7 +182,7 @@ def consistency_idnums(
             if idnum_value is not None:
                 which_idnum = idnum.which_idnum
                 if which_idnum not in known:
-                    known[which_idnum] = set()  # type: Set[int]
+                    known[which_idnum] = set()
                 known[which_idnum].add(idnum_value)
 
     # 2. For every observed which_idnum, was it observed in all tasks?
@@ -195,7 +193,7 @@ def consistency_idnums(
             (
                 # "At least one ID number record relates to this which_idnum".
                 any(
-                    idnum.which_idnum == which_idnum
+                    idnum.which_idnum == which_idnum  # type: ignore[arg-type]
                     and idnum.idnum_value is not None
                 )
                 for idnum in task_idnum_list
@@ -373,9 +371,9 @@ class TrackerCtvCommon(object):
             self.latest = all_tasks[-1].when_created
             self.patient = all_tasks[0].patient
         else:
-            self.earliest = None  # type: Optional[Pendulum]
-            self.latest = None  # type: Optional[Pendulum]
-            self.patient = None  # type: Optional[Patient]
+            self.earliest = None  # type: ignore[no-redef]
+            self.latest = None  # type: ignore[no-redef]
+            self.patient = None  # type: ignore[no-redef]
 
         # Summary information
         self.summary = ""
@@ -602,18 +600,20 @@ class TrackerCtvCommon(object):
             req=self.req,
             patient_spec_if_anonymous=cfg.patient_spec_if_anonymous,
             patient_spec=cfg.patient_spec,
-            filename_spec=cfg.ctv_filename_spec
-            if self.as_ctv
-            else cfg.tracker_filename_spec,  # noqa
+            filename_spec=(
+                cfg.ctv_filename_spec
+                if self.as_ctv
+                else cfg.tracker_filename_spec
+            ),
             filetype=ViewArg.PDF,
             is_anonymous=self.patient is None,
             surname=self.patient.get_surname() if self.patient else "",
             forename=self.patient.get_forename() if self.patient else "",
             dob=self.patient.get_dob() if self.patient else None,
             sex=self.patient.get_sex() if self.patient else None,
-            idnum_objects=self.patient.get_idnum_objects()
-            if self.patient
-            else None,  # noqa
+            idnum_objects=(
+                self.patient.get_idnum_objects() if self.patient else None
+            ),
             creation_datetime=None,
             basetable=None,
             serverpk=None,

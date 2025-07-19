@@ -21,11 +21,10 @@
 #pragma once
 #include <QDialog>
 #include <QPointer>
+#include <QUrl>
 class QDialogButtonBox;
 class QLabel;
-class QUrl;
 class ValidatingLineEdit;
-
 
 class PatientRegistrationDialog : public QDialog
 {
@@ -34,11 +33,17 @@ class PatientRegistrationDialog : public QDialog
     // patientProquint() if it succeeds.
 
     Q_OBJECT
+
 public:
-    PatientRegistrationDialog(QWidget* parent = nullptr);
+    PatientRegistrationDialog(
+        QWidget* parent = nullptr,
+        const QUrl& server_url = QUrl(),
+        const QString& patient_proquint = ""
+    );
     QString patientProquint() const;
     QString serverUrlAsString() const;
     QUrl serverUrl() const;
+
 protected:
     QPointer<QDialogButtonBox> m_buttonbox;
     QPointer<ValidatingLineEdit> m_editor_patient_proquint;

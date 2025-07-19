@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_version_string.py
 
@@ -41,8 +39,8 @@ camcops_server/cc_modules/cc_version_string.py
 # -----------------------------------------------------------------------------
 # When you alter the server, it is normal to change these two:
 
-CAMCOPS_SERVER_VERSION_STRING = "2.4.16"
-CAMCOPS_SERVER_CHANGEDATE = "2023-06-13"
+CAMCOPS_SERVER_VERSION_STRING = "2.4.22"
+CAMCOPS_SERVER_CHANGEDATE = "2025-07-16"
 
 # +++ NOW ALSO UPDATE: +++
 #

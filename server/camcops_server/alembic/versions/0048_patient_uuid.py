@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0048_patient_uuid.py
 
@@ -59,8 +57,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("patient", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -70,6 +69,6 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table("patient", schema=None) as batch_op:
         batch_op.drop_column("uuid")

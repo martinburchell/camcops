@@ -25,13 +25,12 @@
 #include <QUrlQuery>
 
 #ifdef Q_OS_ANDROID
-#include <jni.h>
+    #include <jni.h>
 #endif
 
 #include "urlhandler.h"
 
 UrlHandler* UrlHandler::m_instance = NULL;
-
 
 UrlHandler::UrlHandler()
 {
@@ -42,9 +41,9 @@ UrlHandler::UrlHandler()
     // So this is handled in:
     // tablet_qt/android/src/org/camcops/camcops/CamcopsActivity.java
 
-    // We use 'camcops' scheme instead of 'http' (with 'camcops.org' domain)
-    // on Android:
-    // https://doc.qt.io/qt-5/qdesktopservices.html#setUrlHandler says
+    // We use 'camcops' scheme instead of 'https' (with
+    // 'ucam-department-of-psychiatry.github.io' domain) on Android:
+    // https://doc.qt.io/qt-6.5/qdesktopservices.html#setUrlHandler says
     // "It is not possible to claim support for some well known URL schemes,
     // including http and https."
     // Unfortunately some mail clients such as GMail don't display URLs with
@@ -54,19 +53,19 @@ UrlHandler::UrlHandler()
     QDesktopServices::setUrlHandler("camcops", this, "handleUrl");
 }
 
-
 void UrlHandler::handleUrl(const QUrl& url)
 {
     qDebug() << Q_FUNC_INFO << url;
 
     auto query = QUrlQuery(url);
-    auto default_single_user_mode = query.queryItemValue("default_single_user_mode");
+    auto default_single_user_mode
+        = query.queryItemValue("default_single_user_mode");
     if (!default_single_user_mode.isEmpty()) {
         emit defaultSingleUserModeSet(default_single_user_mode);
     }
 
-    auto default_server_location = query.queryItemValue("default_server_location",
-                                                        QUrl::FullyDecoded);
+    auto default_server_location
+        = query.queryItemValue("default_server_location", QUrl::FullyDecoded);
     if (!default_server_location.isEmpty()) {
         emit defaultServerLocationSet(default_server_location);
     }
@@ -77,37 +76,36 @@ void UrlHandler::handleUrl(const QUrl& url)
     }
 }
 
-
 UrlHandler* UrlHandler::getInstance()
 {
-    if (!m_instance)
+    if (!m_instance) {
         m_instance = new UrlHandler;
+    }
     return m_instance;
 }
 
 #ifdef Q_OS_ANDROID
-// Called from android/src/org/camcops/camcops/CamcopsActivity.java
-#ifdef __cplusplus
+    // Called from android/src/org/camcops/camcops/CamcopsActivity.java
+    #ifdef __cplusplus
 extern "C" {
-#endif
+    #endif
 
 JNIEXPORT void JNICALL
-  Java_org_camcops_camcops_CamcopsActivity_handleAndroidUrl(
-      JNIEnv *env,
-      jobject obj,
-      jstring url)
+    Java_org_camcops_camcops_CamcopsActivity_handleAndroidUrl(
+        JNIEnv* env, jobject obj, jstring url
+    )
 {
     Q_UNUSED(obj)
 
-    const char *url_str = env->GetStringUTFChars(url, NULL);
+    const char* url_str = env->GetStringUTFChars(url, NULL);
 
     UrlHandler::getInstance()->handleUrl(QUrl(url_str));
 
     env->ReleaseStringUTFChars(url, url_str);
 }
 
-#ifdef __cplusplus
+    #ifdef __cplusplus
 }
-#endif
+    #endif
 
 #endif

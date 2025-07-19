@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/__init__.py
 
@@ -31,6 +29,7 @@ from camcops_server.tasks.ace3 import Ace3, MiniAce
 from camcops_server.tasks.aims import Aims
 from camcops_server.tasks.apeq_cpft_perinatal import APEQCPFTPerinatal
 from camcops_server.tasks.apeqpt import Apeqpt
+from camcops_server.tasks.aq import Aq
 from camcops_server.tasks.asdas import Asdas
 from camcops_server.tasks.audit import Audit, AuditC
 
@@ -54,6 +53,7 @@ from camcops_server.tasks.cbir import CbiR
 from camcops_server.tasks.ceca import CecaQ3
 from camcops_server.tasks.cesd import Cesd
 from camcops_server.tasks.cesdr import Cesdr
+from camcops_server.tasks.cet import Cet
 from camcops_server.tasks.cgi_task import Cgi
 from camcops_server.tasks.cgisch import CgiSch
 from camcops_server.tasks.chit import Chit
@@ -86,6 +86,7 @@ from camcops_server.tasks.distressthermometer import DistressThermometer
 
 from camcops_server.tasks.edeq import Edeq
 from camcops_server.tasks.elixhauserci import ElixhauserCI
+from camcops_server.tasks.empsa import Empsa
 from camcops_server.tasks.epds import Epds
 from camcops_server.tasks.eq5d5l import Eq5d5l
 from camcops_server.tasks.esspri import Esspri

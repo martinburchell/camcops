@@ -20,6 +20,8 @@
 
 #pragma once
 
+// #define QUPHOTO_USE_CAMERA_QML
+
 #include "db/blobfieldref.h"
 #include "lib/openglfunc.h"
 #include "questionnairelib/quelement.h"
@@ -30,12 +32,12 @@ class CameraQml;
 class QLabel;
 class QWidget;
 
-
 class QuPhoto : public QuElement
 {
     // Allows users to take a photo using the device's camera.
 
     Q_OBJECT
+
 public:
     // Constructor
     QuPhoto(BlobFieldRefPtr fieldref, QObject* parent = nullptr);
@@ -44,7 +46,8 @@ protected:
     // Set widget state (image) from field data.
     void setFromField();
 
-    virtual QPointer<QWidget> makeWidget(Questionnaire* questionnaire) override;
+    virtual QPointer<QWidget> makeWidget(Questionnaire* questionnaire
+    ) override;
     virtual FieldRefPtrList fieldrefs() const override;
 
     // Rotate image.
@@ -72,11 +75,6 @@ protected slots:
     // "User cancelled taking a photo."
     void cameraCancelled();
 
-    // "Camera sends you this captured raw image."
-    void rawImageCaptured(const QByteArray& data,
-                          const QString& extension_without_dot,
-                          const QString& mimetype);
-
     // "Camera sends you this captured QImage."
     void imageCaptured(const QImage& image);
 
@@ -87,9 +85,14 @@ protected:
 
     QPointer<Questionnaire> m_questionnaire;  // our questionnaire
     QPointer<QLabel> m_incomplete_optional_label;  // label for incomplete data
-    QPointer<QLabel> m_incomplete_mandatory_label;  // label for incomplete data
+    QPointer<QLabel> m_incomplete_mandatory_label;
+    // ... label for incomplete data
     QPointer<QLabel> m_field_problem_label;  // "something wrong" indicator
     QPointer<AspectRatioPixmap> m_image_widget;  // image display widget
+#ifdef QUPHOTO_USE_CAMERA_QML
     QPointer<CameraQml> m_camera;  // camera
+#else
+    QPointer<CameraQCamera> m_camera;  // camera
+#endif
     QPointer<QWidget> m_main_widget;  // top-level widget
 };

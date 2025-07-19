@@ -18,12 +18,20 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 #include <QLabel>
 #include <QMap>
-#include "common/gui_defines.h"
 
+#include "common/gui_defines.h"  // IWYU pragma: keep
 
 class LabelWordWrapWide : public QLabel
 {
@@ -31,8 +39,8 @@ class LabelWordWrapWide : public QLabel
     // This is a surprisingly tricky thing to do.
 
     Q_OBJECT
-public:
 
+public:
     // Construct with text.
     // The default size policy is preferredPreferredHFWPolicy().
     explicit LabelWordWrapWide(const QString& text, QWidget* parent = nullptr);
@@ -88,8 +96,8 @@ protected:
     QSize extraSizeForCssOrLayout() const;
 
     // Clear our cached information.
-    // - Widgets shouldn't need to cache their size hints; that's done by layouts
-    //   for them. See
+    // - Widgets shouldn't need to cache their size hints; that's done by
+    //   layouts for them. See
     //   http://kdemonkey.blogspot.co.uk/2013/11/understanding-qwidget-layout-flow.html
     // - However, for performance... we'll cache some things.
     //   In particular, word-wrapping labels can get asked to calculate their
@@ -101,7 +109,10 @@ protected:
     void clearCache();
 
 protected:
-    mutable QSize m_cached_unwrapped_text_size;  // cached "single-line" text size
-    mutable QSize m_cached_extra_for_css_or_layout;  // cached "extra size for CSS"
-    mutable QMap<int, int> m_cached_qlabel_height_for_width;  // cached map of width -> height
+    mutable QSize m_cached_unwrapped_text_size;
+    // ... cached "single-line" text size
+    mutable QSize m_cached_extra_for_css_or_layout;
+    // ... cached "extra size for CSS"
+    mutable QMap<int, int> m_cached_qlabel_height_for_width;
+    // ... cached map of width -> height
 };

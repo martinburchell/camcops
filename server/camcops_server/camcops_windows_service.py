@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/camcops_windows_service.py
 
@@ -134,7 +132,7 @@ class CamcopsWinService(WindowsService):
 # =============================================================================
 
 
-def main():
+def main() -> None:
     """
     Command-line entry point.
     """

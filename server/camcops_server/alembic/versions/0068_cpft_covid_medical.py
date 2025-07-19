@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0068_cpft_covid_medical.py
 
@@ -62,8 +60,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         "cpft_covid_medical",
         sa.Column(
@@ -372,5 +371,5 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     op.drop_table("cpft_covid_medical")

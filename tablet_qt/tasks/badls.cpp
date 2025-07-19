@@ -19,16 +19,17 @@
 */
 
 #include "badls.h"
+
 #include <QMap>
-#include "maths/mathfunc.h"
+
 #include "lib/stringfunc.h"
-#include "questionnairelib/namevaluepair.h"
+#include "maths/mathfunc.h"
 #include "questionnairelib/questionnaire.h"
 #include "questionnairelib/qumcq.h"
 #include "questionnairelib/qutext.h"
 #include "tasklib/taskfactory.h"
+#include "tasklib/taskregistrar.h"
 using mathfunc::noneNull;
-// using mathfunc::sumInt;
 using mathfunc::totalScorePhrase;
 using stringfunc::strseq;
 
@@ -46,21 +47,20 @@ const QMap<QString, int> BADLS_SCORING{
     {"e", 0},
 };
 
-
 void initializeBadls(TaskFactory& factory)
 {
     static TaskRegistrar<Badls> registered(factory);
 }
 
-
 Badls::Badls(CamcopsApp& app, DatabaseManager& db, const int load_pk) :
     Task(app, db, BADLS_TABLENAME, false, false, true)  // ... anon, clin, resp
 {
-    addFields(strseq(QPREFIX, FIRST_Q, N_QUESTIONS), QMetaType::fromType<QString>());
+    addFields(
+        strseq(QPREFIX, FIRST_Q, N_QUESTIONS), QMetaType::fromType<QString>()
+    );
 
     load(load_pk);  // MUST ALWAYS CALL from derived Task constructor.
 }
-
 
 // ============================================================================
 // Class info
@@ -71,18 +71,15 @@ QString Badls::shortname() const
     return "BADLS";
 }
 
-
 QString Badls::longname() const
 {
     return tr("Bristol Activities of Daily Living Scale");
 }
 
-
 QString Badls::description() const
 {
     return tr("20-item carer-rated scale for use in dementia.");
 }
-
 
 // ============================================================================
 // Instance info
@@ -93,12 +90,10 @@ bool Badls::isComplete() const
     return noneNull(values(strseq(QPREFIX, FIRST_Q, N_QUESTIONS)));
 }
 
-
 QStringList Badls::summary() const
 {
     return QStringList{totalScorePhrase(totalScore(), MAX_QUESTION_SCORE)};
 }
-
 
 QStringList Badls::detail() const
 {
@@ -108,7 +103,6 @@ QStringList Badls::detail() const
     lines += summary();
     return lines;
 }
-
 
 OpenableWidget* Badls::editor(const bool read_only)
 {
@@ -128,10 +122,12 @@ OpenableWidget* Badls::editor(const bool read_only)
             {xstring("q" + qnumstr + "_d"), "d"},
             {xstring("q" + qnumstr + "_e"), "e"},
         };
-        elements.append(QuElementPtr(
-            (new QuText(xstring("q" + qnumstr)))->setBold()));
-        elements.append(QuElementPtr(
-            new QuMcq(fieldRef(QPREFIX + qnumstr), options)));
+        elements.append(
+            QuElementPtr((new QuText(xstring("q" + qnumstr)))->setBold())
+        );
+        elements.append(
+            QuElementPtr(new QuMcq(fieldRef(QPREFIX + qnumstr), options))
+        );
     }
 
     QuPagePtr page((new QuPage(elements))->setTitle(shortname()));
@@ -141,7 +137,6 @@ OpenableWidget* Badls::editor(const bool read_only)
     questionnaire->setReadOnly(read_only);
     return questionnaire;
 }
-
 
 // ============================================================================
 // Task-specific calculations
@@ -153,11 +148,10 @@ int Badls::score(const int qnum) const
     return BADLS_SCORING[v.toString()];
     // If the key is not present, we will get a default-initialized int [1],
     // which will be 0 [2, 3].
-    // [1] http://doc.qt.io/qt-5/qmap.html#operator-5b-5d
-    // [2] http://doc.qt.io/qt-5/containers.html#default-constructed-value
+    // [1] https://doc.qt.io/qt-6.5/qmap.html#operator-5b-5d
+    // [2] https://doc.qt.io/qt-6.5/containers.html#default-constructed-value
     // [3] http://stackoverflow.com/questions/2667355/mapint-int-default-values
 }
-
 
 int Badls::totalScore() const
 {

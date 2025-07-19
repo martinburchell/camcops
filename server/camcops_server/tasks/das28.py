@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/das28.py
 
@@ -30,7 +28,7 @@ camcops_server/tasks/das28.py
 """
 
 import math
-from typing import Any, Dict, List, Optional, Type, Tuple
+from typing import Any, List, Optional, Type
 
 from camcops_server.cc_modules.cc_constants import CssClass
 from camcops_server.cc_modules.cc_html import (
@@ -43,8 +41,8 @@ from camcops_server.cc_modules.cc_html import (
 )
 from camcops_server.cc_modules.cc_request import CamcopsRequest
 from camcops_server.cc_modules.cc_sqla_coltypes import (
-    BoolColumn,
-    CamcopsColumn,
+    bool_column,
+    camcops_column,
     PermittedValueChecker,
     SummaryCategoryColType,
 )
@@ -62,26 +60,28 @@ from camcops_server.cc_modules.cc_trackerhelpers import (
 
 import cardinal_pythonlib.rnc_web as ws
 from sqlalchemy import Column, Float, Integer
-from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
-class Das28Metaclass(DeclarativeMeta):
-    # noinspection PyInitNewSignature
-    def __init__(
-        cls: Type["Das28"],
-        name: str,
-        bases: Tuple[Type, ...],
-        classdict: Dict[str, Any],
-    ) -> None:
+class Das28(  # type: ignore[misc]
+    TaskHasPatientMixin,
+    TaskHasClinicianMixin,
+    Task,
+):
+    __tablename__ = "das28"
+    shortname = "DAS28"
+    provides_trackers = True
+
+    @classmethod
+    def extend_columns(cls: Type["Das28"], **kwargs: Any) -> None:
         for field_name in cls.get_joint_field_names():
             setattr(
-                cls, field_name, BoolColumn(field_name, comment="0 no, 1 yes")
+                cls, field_name, bool_column(field_name, comment="0 no, 1 yes")
             )
 
         setattr(
             cls,
             "vas",
-            CamcopsColumn(
+            camcops_column(
                 "vas",
                 Integer,
                 comment="Patient assessment of health (0-100mm)",
@@ -94,16 +94,6 @@ class Das28Metaclass(DeclarativeMeta):
         setattr(cls, "crp", Column("crp", Float, comment="CRP (0-300 mg/L)"))
 
         setattr(cls, "esr", Column("esr", Float, comment="ESR (1-300 mm/h)"))
-
-        super().__init__(name, bases, classdict)
-
-
-class Das28(
-    TaskHasPatientMixin, TaskHasClinicianMixin, Task, metaclass=Das28Metaclass
-):
-    __tablename__ = "das28"
-    shortname = "DAS28"
-    provides_trackers = True
 
     JOINTS = (
         ["shoulder", "elbow", "wrist"]
@@ -129,7 +119,7 @@ class Das28(
     ESR_MODERATE_HIGH_CUTOFF = 5.1
 
     @classmethod
-    def field_name(cls, side, joint, state) -> str:
+    def field_name(cls, side: str, joint: str, state: str) -> str:
         return f"{side}_{joint}_{state}"
 
     @classmethod
@@ -185,7 +175,7 @@ class Das28(
             return False
 
         # noinspection PyUnresolvedReferences
-        if self.crp is None and self.esr is None:
+        if self.crp is None and self.esr is None:  # type: ignore[attr-defined]
             return False
 
         if not self.field_contents_valid():
@@ -260,41 +250,41 @@ class Das28(
             horizontal_labels=horizontal_labels,
         )
 
-    def swollen_joint_count(self):
+    def swollen_joint_count(self) -> int:
         return self.count_booleans(
             [n for n in self.get_joint_field_names() if n.endswith("swollen")]
         )
 
-    def tender_joint_count(self):
+    def tender_joint_count(self) -> int:
         return self.count_booleans(
             [n for n in self.get_joint_field_names() if n.endswith("tender")]
         )
 
     def das28_crp(self) -> Optional[float]:
         # noinspection PyUnresolvedReferences
-        if self.crp is None or self.vas is None:
+        if self.crp is None or self.vas is None:  # type: ignore[attr-defined]
             return None
 
         # noinspection PyUnresolvedReferences
         return (
             0.56 * math.sqrt(self.tender_joint_count())
             + 0.28 * math.sqrt(self.swollen_joint_count())
-            + 0.36 * math.log(self.crp + 1)
-            + 0.014 * self.vas
+            + 0.36 * math.log(self.crp + 1)  # type: ignore[attr-defined]
+            + 0.014 * self.vas  # type: ignore[attr-defined]
             + 0.96
         )
 
     def das28_esr(self) -> Optional[float]:
         # noinspection PyUnresolvedReferences
-        if self.esr is None or self.vas is None:
+        if self.esr is None or self.vas is None:  # type: ignore[attr-defined]
             return None
 
         # noinspection PyUnresolvedReferences
         return (
             0.56 * math.sqrt(self.tender_joint_count())
             + 0.28 * math.sqrt(self.swollen_joint_count())
-            + 0.70 * math.log(self.esr)
-            + 0.014 * self.vas
+            + 0.70 * math.log(self.esr)  # type: ignore[attr-defined]
+            + 0.014 * self.vas  # type: ignore[attr-defined]
         )
 
     def activity_state_crp(self, req: CamcopsRequest, measurement: Any) -> str:
@@ -377,7 +367,7 @@ class Das28(
             <div class="{CssClass.FOOTNOTES}">
                 [1] 0.56 × √(tender joint count) +
                     0.28 × √(swollen joint count) +
-                    0.36 × ln(CRP + 1) +
+                    0.36 × ln([CRP in mg/L] + 1) +
                     0.014 x VAS disease activity +
                     0.96.
                     CRP 0–300 mg/L. VAS: 0–100mm.<br>
@@ -388,7 +378,7 @@ class Das28(
                     &gt;4.6 high disease activity.<br>
                 [2] 0.56 × √(tender joint count) +
                     0.28 × √(swollen joint count) +
-                    0.70 × ln(ESR) +
+                    0.70 × ln(ESR in mm/h) +
                     0.014 x VAS disease activity.
                     ESR 1–300 mm/h. VAS: 0–100mm.<br>
                     Cutoffs:

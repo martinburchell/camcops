@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0069_manage_patient_permissions.py
 
@@ -57,8 +55,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table("_security_user_group", schema=None) as batch_op:
         batch_op.add_column(
             sa.Column(
@@ -78,7 +77,7 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table("_security_user_group", schema=None) as batch_op:
         batch_op.drop_column("may_manage_patients")
         batch_op.drop_column("may_email_patients")

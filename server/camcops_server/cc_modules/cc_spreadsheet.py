@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_spreadsheet.py
 
@@ -60,7 +58,7 @@ from cardinal_pythonlib.excel import (
     convert_for_pyexcel_ods3,
 )
 from cardinal_pythonlib.logs import BraceStyleAdapter
-from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.engine import Result
 
 from camcops_server.cc_modules.cc_constants import DateFormat
 
@@ -72,7 +70,7 @@ if ODS_VIA_PYEXCEL:
 
     ODSWriter = ODSSheet = None
 else:
-    from odswriter import ODSWriter, Sheet as ODSSheet  # noqa
+    from odswriter import ODSWriter, Sheet as ODSSheet  # type: ignore[no-redef]  # noqa: E501
 
     pyexcel_ods3 = None
 
@@ -81,8 +79,8 @@ if XLSX_VIA_PYEXCEL:
 
     openpyxl = XLWorkbook = XLWorksheet = None
 else:
-    from openpyxl.workbook.workbook import Workbook as XLWorkbook
-    from openpyxl.worksheet.worksheet import Worksheet as XLWorksheet
+    from openpyxl.workbook.workbook import Workbook as XLWorkbook  # type: ignore[no-redef]  # noqa: E501
+    from openpyxl.worksheet.worksheet import Worksheet as XLWorksheet  # type: ignore[no-redef]  # noqa: E501
 
     pyexcel_xlsx = None
 
@@ -135,20 +133,20 @@ class SpreadsheetPage(object):
         return page
 
     @classmethod
-    def from_resultproxy(cls, name: str, rp: ResultProxy) -> "SpreadsheetPage":
+    def from_result(cls, name: str, rp: Result) -> "SpreadsheetPage":
         """
-        Creates a SpreadsheetPage object from an SQLAlchemy ResultProxy.
+        Creates a SpreadsheetPage object from an SQLAlchemy Result.
 
         Args:
             rp:
-                A :class:` sqlalchemy.engine.result.ResultProxy`.
+                A :class:` sqlalchemy.engine.Result`.
             name:
                 Name for this sheet.
         """
         column_names = rp.keys()
         rows = rp.fetchall()
         return cls.from_headings_rows(
-            name=name, headings=column_names, rows=rows
+            name=name, headings=column_names, rows=rows  # type: ignore[arg-type]  # noqa: E501
         )
 
     @property
@@ -301,25 +299,25 @@ class SpreadsheetPage(object):
             writer.writerow([row.get(h) for h in self.headings])
         return f.getvalue()
 
-    def write_to_openpyxl_xlsx_worksheet(self, ws: "XLWorksheet") -> None:
+    def write_to_openpyxl_xlsx_worksheet(self, ws: "XLWorksheet") -> None:  # type: ignore[valid-type]  # noqa: E501
         """
         Writes data from this page to an existing ``openpyxl`` XLSX worksheet.
         """
-        ws.append(self.headings)
+        ws.append(self.headings)  # type: ignore[attr-defined]
         for row in self.rows:
-            ws.append(
+            ws.append(  # type: ignore[attr-defined]
                 [convert_for_openpyxl(row.get(h)) for h in self.headings]
             )
 
-    def write_to_odswriter_ods_worksheet(self, ws: "ODSSheet") -> None:
+    def write_to_odswriter_ods_worksheet(self, ws: "ODSSheet") -> None:  # type: ignore[valid-type]  # noqa: E501
         """
         Writes data from this page to an existing ``odswriter`` ODS sheet.
         """
         # noinspection PyUnresolvedReferences
-        ws.writerow(self.headings)
+        ws.writerow(self.headings)  # type: ignore[attr-defined]
         for row in self.rows:
             # noinspection PyUnresolvedReferences
-            ws.writerow([row.get(h) for h in self.headings])
+            ws.writerow([row.get(h) for h in self.headings])  # type: ignore[attr-defined]  # noqa: E501
 
     def r_object_name(self) -> str:
         """
@@ -521,7 +519,7 @@ class SpreadsheetCollection(object):
         else:  # use openpyxl
             # Marginal performance gain with write_only. Does not automatically
             # add a blank sheet
-            wb = XLWorkbook(write_only=True)
+            wb = XLWorkbook(write_only=True)  # type: ignore[misc]
             valid_name_dict = self.get_pages_with_valid_sheet_names()
             for page, title in valid_name_dict.items():
                 ws = wb.create_sheet(title=title)
@@ -583,7 +581,7 @@ class SpreadsheetCollection(object):
                 with open(file, "wb") as binaryfile:
                     return self.write_ods(binaryfile)  # recurse once
             # noinspection PyCallingNonCallable
-            with ODSWriter(file) as odsfile:
+            with ODSWriter(file) as odsfile:  # type: ignore[misc]
                 valid_name_dict = self.get_pages_with_valid_sheet_names()
                 for page, title in valid_name_dict.items():
                     sheet = odsfile.new_sheet(name=title)

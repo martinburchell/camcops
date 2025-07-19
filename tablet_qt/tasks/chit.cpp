@@ -19,21 +19,16 @@
 */
 
 #include "chit.h"
-#include "common/textconst.h"
-#include "common/uiconst.h"
-#include "maths/mathfunc.h"
+
 #include "lib/stringfunc.h"
 #include "lib/uifunc.h"
 #include "lib/version.h"
-#include "questionnairelib/commonoptions.h"
+#include "maths/mathfunc.h"
 #include "questionnairelib/namevaluepair.h"
 #include "questionnairelib/questionnaire.h"
-#include "questionnairelib/quboolean.h"
-#include "questionnairelib/qumcq.h"
 #include "questionnairelib/qumcqgrid.h"
-#include "questionnairelib/quspacer.h"
-#include "questionnairelib/qutext.h"
 #include "tasklib/taskfactory.h"
+#include "tasklib/taskregistrar.h"
 using mathfunc::anyNull;
 using mathfunc::sumInt;
 using mathfunc::totalScorePhrase;
@@ -54,16 +49,15 @@ void initializeChit(TaskFactory& factory)
     static TaskRegistrar<Chit> registered(factory);
 }
 
-
 Chit::Chit(CamcopsApp& app, DatabaseManager& db, const int load_pk) :
-    Task(app, db, CHIT_TABLENAME, false, false, false),  // ... anon, clin, resp
+    Task(app, db, CHIT_TABLENAME, false, false, false),
+    // ... anon, clin, resp
     m_questionnaire(nullptr)
 {
     addFields(strseq(QPREFIX, FIRST_Q, LAST_Q), QMetaType::fromType<int>());
 
     load(load_pk);  // MUST ALWAYS CALL from derived Task constructor.
 }
-
 
 // ============================================================================
 // Class info
@@ -74,18 +68,15 @@ QString Chit::shortname() const
     return "CHI-T";
 }
 
-
 QString Chit::longname() const
 {
     return tr("Cambridge–Chicago Compulsivity Trait Scale");
 }
 
-
 QString Chit::description() const
 {
     return tr("A scale designed to measure transdiagnostic compulsivity.");
 }
-
 
 QStringList Chit::scoredFieldNames() const
 {
@@ -96,7 +87,6 @@ Version Chit::minimumServerVersion() const
 {
     return Version(2, 4, 15);
 }
-
 
 // ============================================================================
 // Instance info
@@ -112,18 +102,15 @@ bool Chit::isComplete() const
     return true;
 }
 
-
 int Chit::totalScore() const
 {
     return sumInt(values(scoredFieldNames()));
 }
 
-
 QStringList Chit::summary() const
 {
     return QStringList{totalScorePhrase(totalScore(), MAX_TOTAL_SCORE)};
 }
-
 
 QStringList Chit::detail() const
 {
@@ -136,7 +123,6 @@ QStringList Chit::detail() const
 
     return lines;
 }
-
 
 OpenableWidget* Chit::editor(const bool read_only)
 {
@@ -152,8 +138,9 @@ OpenableWidget* Chit::editor(const bool read_only)
 
     for (const QString& fieldname : scoredFieldNames()) {
         const QString& description = xstring(fieldname);
-        q_field_pairs.append(QuestionWithOneField(description,
-                                                  fieldRef(fieldname)));
+        q_field_pairs.append(
+            QuestionWithOneField(description, fieldRef(fieldname))
+        );
     }
     auto grid = new QuMcqGrid(q_field_pairs, agreement_options);
 

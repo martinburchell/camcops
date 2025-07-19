@@ -38,3 +38,5 @@ Developer notes
     internationalization.rst
     penetration_testing.rst
     server_testing.rst
+    client_testing.rst
+    versions.rst

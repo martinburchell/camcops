@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_html.py
 
@@ -126,7 +124,7 @@ def table(content: str, table_class: str = "") -> str:
     """
 
 
-def tr(*args, tr_class: str = "", literal: bool = False) -> str:
+def tr(*args: Any, tr_class: str = "", literal: bool = False) -> str:
     """
     Make simple HTML table data row.
 
@@ -139,7 +137,7 @@ def tr(*args, tr_class: str = "", literal: bool = False) -> str:
     if literal:
         elements = args
     else:
-        elements = [td(x) for x in args]
+        elements = [td(x) for x in args]  # type: ignore[assignment]
     tr_class = f' class="{tr_class}"' if tr_class else ""
     contents = "".join(elements)
     return f"<tr{tr_class}>{contents}</tr>\n"
@@ -434,8 +432,7 @@ def pmid(x: int) -> str:
     Returns hyperlinked text to a PubMed ID (PMID).
 
     Args:
-        p:
-            The integer PMID.
+        x: The integer PMID.
 
     Returns:
         Hyperlinked text, as raw HTML.
@@ -449,11 +446,22 @@ def doi(x: str) -> str:
     Returns hyperlinked text to a digital object identifier (DOI).
 
     Args:
-        p:
-            The integer PMID.
+        x: The DOI.
 
     Returns:
         Hyperlinked text, as raw HTML.
 
     """
     return f'<a href="https://doi.org/{x}">doi:{x}</a>'
+
+
+def a_href(url: str, text: str = None) -> str:
+    """
+    Returns text hyperlinked to a URL; by default, the text is the URL itself.
+
+    Args:
+        url: the raw URL
+        text: text to be shown
+    """
+    text = text or url
+    return f'<a href="{url}">{text}</a>'

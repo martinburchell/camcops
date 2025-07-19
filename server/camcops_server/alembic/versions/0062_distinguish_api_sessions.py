@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0062.py
 
@@ -58,7 +56,7 @@ depends_on = None
 # =============================================================================
 
 
-def upgrade():
+def upgrade() -> None:
     with op.batch_alter_table(
         "_security_webviewer_sessions", schema=None
     ) as batch_op:
@@ -75,8 +73,8 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table(
         "_security_webviewer_sessions", schema=None
-    ) as batch_op:  # noqa
+    ) as batch_op:
         batch_op.drop_column("is_api_session")

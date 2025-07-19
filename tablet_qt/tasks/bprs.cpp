@@ -19,13 +19,15 @@
 */
 
 #include "bprs.h"
-#include "maths/mathfunc.h"
+
 #include "lib/stringfunc.h"
+#include "maths/mathfunc.h"
 #include "questionnairelib/namevaluepair.h"
 #include "questionnairelib/questionnaire.h"
 #include "questionnairelib/qumcq.h"
 #include "questionnairelib/qutext.h"
 #include "tasklib/taskfactory.h"
+#include "tasklib/taskregistrar.h"
 using mathfunc::noneNull;
 using mathfunc::scorePhrase;
 using mathfunc::sumInt;
@@ -48,15 +50,15 @@ void initializeBprs(TaskFactory& factory)
     static TaskRegistrar<Bprs> registered(factory);
 }
 
-
 Bprs::Bprs(CamcopsApp& app, DatabaseManager& db, const int load_pk) :
     Task(app, db, BPRS_TABLENAME, false, true, false)  // ... anon, clin, resp
 {
-    addFields(strseq(QPREFIX, FIRST_Q, N_QUESTIONS), QMetaType::fromType<int>());
+    addFields(
+        strseq(QPREFIX, FIRST_Q, N_QUESTIONS), QMetaType::fromType<int>()
+    );
 
     load(load_pk);  // MUST ALWAYS CALL from derived Task constructor.
 }
-
 
 // ============================================================================
 // Class info
@@ -67,19 +69,18 @@ QString Bprs::shortname() const
     return "BPRS";
 }
 
-
 QString Bprs::longname() const
 {
     return tr("Brief Psychiatric Rating Scale");
 }
 
-
 QString Bprs::description() const
 {
-    return tr("18-item clinician-administered rating of multiple aspects of "
-              "psychopathology.");
+    return tr(
+        "18-item clinician-administered rating of multiple aspects of "
+        "psychopathology."
+    );
 }
-
 
 // ============================================================================
 // Instance info
@@ -90,13 +91,16 @@ bool Bprs::isComplete() const
     return noneNull(values(strseq(QPREFIX, FIRST_Q, N_QUESTIONS)));
 }
 
-
 QStringList Bprs::summary() const
 {
-    return QStringList{scorePhrase(xstring("bprs18_total_score"),
-                                   totalScore(), MAX_QUESTION_SCORE, " ", "")};
+    return QStringList{scorePhrase(
+        xstring("bprs18_total_score"),
+        totalScore(),
+        MAX_QUESTION_SCORE,
+        " ",
+        ""
+    )};
 }
-
 
 QStringList Bprs::detail() const
 {
@@ -107,7 +111,6 @@ QStringList Bprs::detail() const
     return lines;
 }
 
-
 OpenableWidget* Bprs::editor(const bool read_only)
 {
     QVector<QuPagePtr> pages;
@@ -115,7 +118,8 @@ OpenableWidget* Bprs::editor(const bool read_only)
     auto addpage = [this, &pages](int n, bool include_na) -> void {
         NameValueOptions options;
         for (int i = 1; i <= 7; ++i) {
-            const QString name = xstring(QString("q%1_option%2").arg(n).arg(i));
+            const QString name
+                = xstring(QString("q%1_option%2").arg(n).arg(i));
             options.append(NameValuePair(name, i));
         }
         if (include_na) {
@@ -126,18 +130,18 @@ OpenableWidget* Bprs::editor(const bool read_only)
         const QString question = xstring(QString("q%1_question").arg(n));
         const QString fieldname = strnum(QPREFIX, n);
         QuPagePtr page((new QuPage{
-            new QuText(question),
-            new QuMcq(fieldRef(fieldname), options),
-        })->setTitle(pagetitle));
+                            new QuText(question),
+                            new QuMcq(fieldRef(fieldname), options),
+                        })
+                           ->setTitle(pagetitle));
         pages.append(page);
     };
 
     pages.append(getClinicianDetailsPage());
     for (int n = FIRST_Q; n <= N_QUESTIONS; ++n) {
-        const bool include_na = (
-                    n == 1 || n == 2 || n == 5 || n == 8 || n == 9 ||
-                    n == 10 || n == 11 || n == 12 || n == 15 ||
-                    n == 18 || n == 20);
+        const bool include_na
+            = (n == 1 || n == 2 || n == 5 || n == 8 || n == 9 || n == 10
+               || n == 11 || n == 12 || n == 15 || n == 18 || n == 20);
         addpage(n, include_na);
     }
 
@@ -146,7 +150,6 @@ OpenableWidget* Bprs::editor(const bool read_only)
     questionnaire->setReadOnly(read_only);
     return questionnaire;
 }
-
 
 // ============================================================================
 // Task-specific calculations

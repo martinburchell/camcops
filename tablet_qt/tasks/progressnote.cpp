@@ -19,6 +19,7 @@
 */
 
 #include "progressnote.h"
+
 #include "common/textconst.h"
 #include "lib/stringfunc.h"
 #include "questionnairelib/questionnaire.h"
@@ -26,12 +27,12 @@
 #include "questionnairelib/qutext.h"
 #include "questionnairelib/qutextedit.h"
 #include "tasklib/taskfactory.h"
+#include "tasklib/taskregistrar.h"
 
 const QString ProgressNote::PROGNOTE_TABLENAME("progressnote");
 
 const QString LOCATION("location");
 const QString NOTE("note");
-
 
 void initializeProgressNote(TaskFactory& factory)
 {
@@ -39,16 +40,17 @@ void initializeProgressNote(TaskFactory& factory)
 }
 
 
-ProgressNote::ProgressNote(CamcopsApp& app, DatabaseManager& db,
-                           const int load_pk) :
-    Task(app, db, PROGNOTE_TABLENAME, false, true, false)  // ... anon, clin, resp
+ProgressNote::ProgressNote(
+    CamcopsApp& app, DatabaseManager& db, const int load_pk
+) :
+    Task(app, db, PROGNOTE_TABLENAME, false, true, false)
+// ... anon, clin, resp
 {
     addField(LOCATION, QMetaType::fromType<QString>());
     addField(NOTE, QMetaType::fromType<QString>());
 
     load(load_pk);  // MUST ALWAYS CALL from derived Task constructor.
 }
-
 
 // ============================================================================
 // Class info
@@ -59,24 +61,20 @@ QString ProgressNote::shortname() const
     return "ProgressNote";
 }
 
-
 QString ProgressNote::longname() const
 {
     return tr("Progress note");
 }
-
 
 QString ProgressNote::description() const
 {
     return tr("Clinical progress note entry.");
 }
 
-
 QString ProgressNote::infoFilenameStem() const
 {
     return "clinical";
 }
-
 
 // ============================================================================
 // Instance info
@@ -87,12 +85,10 @@ bool ProgressNote::isComplete() const
     return !valueIsNullOrEmpty(NOTE);
 }
 
-
 QStringList ProgressNote::summary() const
 {
     return QStringList{stringfunc::abbreviate(valueString(NOTE))};
 }
-
 
 QStringList ProgressNote::detail() const
 {
@@ -102,16 +98,16 @@ QStringList ProgressNote::detail() const
     return lines;
 }
 
-
 OpenableWidget* ProgressNote::editor(const bool read_only)
 {
     QuPagePtr page((new QuPage{
-        getClinicianQuestionnaireBlockRawPointer(),
-        new QuText(TextConst::location()),
-        new QuLineEdit(fieldRef(LOCATION)),
-        new QuText(TextConst::note()),
-        new QuTextEdit(fieldRef(NOTE)),
-    })->setTitle(longname()));
+                        getClinicianQuestionnaireBlockRawPointer(),
+                        new QuText(TextConst::location()),
+                        new QuLineEdit(fieldRef(LOCATION)),
+                        new QuText(TextConst::note()),
+                        new QuTextEdit(fieldRef(NOTE)),
+                    })
+                       ->setTitle(longname()));
 
     auto questionnaire = new Questionnaire(m_app, {page});
     questionnaire->setType(QuPage::PageType::Clinician);

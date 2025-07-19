@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_pyramid.py
 
@@ -172,6 +170,7 @@ class ViewParam(object):
     ANONYMISE = "anonymise"
     BACK_TASK_TABLENAME = "back_task_tablename"
     BACK_TASK_SERVER_PK = "back_task_server_pk"
+    BY_DAY_OF_MONTH = "by_day_of_month"
     BY_MONTH = "by_month"
     BY_TASK = "by_task"
     BY_USER = "by_user"
@@ -659,11 +658,9 @@ class UrlParam(object):
 
     See also :class:`RoutePath`.
 
-    """  # noqa
+    """
 
-    def __init__(
-        self, name: str, paramtype: UrlParamType == UrlParamType.PLAIN_STRING
-    ) -> None:
+    def __init__(self, name: str, paramtype: UrlParamType) -> None:
         """
         Args:
             name: the name of the parameter
@@ -723,6 +720,7 @@ def make_url_path(base: str, *args: UrlParam) -> str:
 # Routes
 # =============================================================================
 
+
 # Class to collect constants together
 # See also http://xion.io/post/code/python-enums-are-ok.html
 class Routes(object):
@@ -732,6 +730,9 @@ class Routes(object):
     - Used by the ``@view_config(route_name=...)`` decorator.
     - Configured via :class:`RouteCollection` / :class:`RoutePath` to the
       Pyramid route configurator.
+
+    Note: these are internal names, not (necessarily) URL paths. For those, see
+    RouteCollection.
     """
 
     # Hard-coded special paths
@@ -861,7 +862,7 @@ class RoutePath(object):
       ``'/thing/{bork_id:\d+}'`` to restrict to digits. See
       https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/urldispatch.html
 
-    """  # noqa
+    """
 
     def __init__(
         self,
@@ -878,7 +879,7 @@ class RoutePath(object):
 
 MASTER_ROUTE_WEBVIEW = "/"
 MASTER_ROUTE_CLIENT_API = "/api"
-MASTER_ROUTE_CLIENT_API_ALIAS = "/database"
+MASTER_ROUTE_CLIENT_API_ALIAS = "/database"  # legacy path
 
 STATIC_CAMCOPS_PACKAGE_PATH = "camcops_server.static:"
 # ... the "static" package (directory with __init__.py) within the
@@ -1156,7 +1157,7 @@ def get_session_factory() -> Callable[["CamcopsRequest"], ISession]:
                             # ...
                             response.set_cookie(...)
 
-        """  # noqa
+        """
         cfg = req.config
         secure_cookies = not cfg.allow_insecure_cookies
         pyramid_factory = SignedCookieSessionFactory(
@@ -1272,7 +1273,7 @@ class CamcopsAuthenticationPolicy(object):
     # noinspection PyUnusedLocal
     @staticmethod
     def remember(
-        request: "CamcopsRequest", userid: int, **kw
+        request: "CamcopsRequest", userid: int, **kw: Any
     ) -> List[Tuple[str, str]]:
         return []
 
@@ -1653,7 +1654,7 @@ class CamcopsPage(Page):
         item_count: int = None,
         wrapper_class: Type[Any] = None,
         ellipsis: str = "&hellip;",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """
         See :class:`paginate.Page`. Additional arguments:
@@ -1668,7 +1669,7 @@ class CamcopsPage(Page):
             if wrapper_class:
                 item_count = len(wrapper_class(collection))
             else:
-                item_count = len(collection)
+                item_count = len(collection)  # type: ignore[arg-type]
         n_pages = ((item_count - 1) // items_per_page) + 1
         page = min(page, n_pages)
         super().__init__(
@@ -1703,7 +1704,7 @@ class CamcopsPage(Page):
         curpage_attr: Dict[str, str] = None,
         dotdot_attr: Dict[str, str] = None,
         link_tag: Callable[[Dict[str, str]], str] = None,
-    ):
+    ) -> str:
         """
         See :func:`paginate.Page.pager`.
 
@@ -1757,17 +1758,17 @@ class CamcopsPage(Page):
         link_attr: Dict[str, str] = None,
         curpage_attr: Dict[str, str] = None,
         dotdot_attr: Dict[str, str] = None,
-    ):
+    ) -> dict[str, Any]:
         """
         See equivalent in superclass.
 
         Fixes bugs (e.g. mutable default arguments) and nasties (e.g.
         enforcing ".." for the ellipsis) in the original.
         """
-        self.curpage_attr = curpage_attr or {}  # type: Dict[str, str]
+        self.curpage_attr = curpage_attr or {}
         self.separator = separator
-        self.link_attr = link_attr or {}  # type: Dict[str, str]
-        self.dotdot_attr = dotdot_attr or {}  # type: Dict[str, str]
+        self.link_attr = link_attr or {}
+        self.dotdot_attr = dotdot_attr or {}
         self.url = url
 
         regex_res = re.search(r"~(\d+)~", format)
@@ -1911,7 +1912,7 @@ class SqlalchemyOrmPage(CamcopsPage):
         page: int = 1,
         items_per_page: int = DEFAULT_ROWS_PER_PAGE,
         item_count: int = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         # Since views may accidentally throw strings our way:
         assert isinstance(page, int)
@@ -1963,7 +1964,7 @@ def make_page_url(
     if partial:
         params["partial"] = "1"
     if sort:
-        params = sorted(params.items())
+        params = sorted(params.items())  # type: ignore[assignment]
     qs = urlencode(params, True)  # was urllib.urlencode, but changed in Py3.5
     return "%s?%s" % (path, qs)
 
@@ -2029,6 +2030,6 @@ class HTTPFoundDebugVersion(HTTPFound):
     A debugging version of :class:`HTTPFound`, for debugging redirections.
     """
 
-    def __init__(self, location: str = "", **kwargs) -> None:
+    def __init__(self, location: str = "", **kwargs: Any) -> None:
         log.debug("Redirecting to {!r}", location)
         super().__init__(location, **kwargs)

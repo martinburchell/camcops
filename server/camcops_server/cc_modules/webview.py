@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/webview.py
 
@@ -452,6 +450,7 @@ def errormsg_task_live(req: "CamcopsRequest") -> str:
 # Error views
 # =============================================================================
 
+
 # noinspection PyUnusedLocal
 @notfound_view_config(renderer="not_found.mako", http_cache=NEVER_CACHE)
 def not_found(req: "CamcopsRequest") -> Dict[str, Any]:
@@ -489,6 +488,7 @@ def bad_request(req: "CamcopsRequest") -> Dict[str, Any]:
 # =============================================================================
 # Test pages
 # =============================================================================
+
 
 # noinspection PyUnusedLocal
 @view_config(
@@ -661,7 +661,7 @@ class MfaMixin(FormWizardMixin):
     KEY_INSTRUCTIONS = "instructions"
     KEY_MFA_TIME = "mfa_time"
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._mfa_user: Optional[User] = None
         super().__init__(*args, **kwargs)
 
@@ -910,7 +910,7 @@ class LoggedInUserMfaMixin(MfaMixin):
     (everything except :class:`LoginView`).
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.mfa_user = self.request.user
 
@@ -956,7 +956,7 @@ class LoginView(MfaMixin, FormView):
         MfaMixin.STEP_MFA: "login_token.mako",
     }
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
     # -------------------------------------------------------------------------
@@ -970,7 +970,7 @@ class LoginView(MfaMixin, FormView):
         if self._mfa_user is None:
             try:
                 user_id = self.state[self.KEY_MFA_USER_ID]
-                self.mfa_user = (
+                self._mfa_user = (
                     self.request.dbsession.query(User)
                     .filter(User.id == user_id)
                     .one_or_none()
@@ -1675,7 +1675,7 @@ class EditOwnUserMfaView(LoggedInUserMfaMixin, UpdateView):
     If you subclass A(B, C), then B's superclass methods are called before C's:
     https://www.python.org/download/releases/2.3/mro/;
     https://makina-corpus.com/blog/metier/2014/python-tutorial-understanding-python-mro-class-search-path;
-    """  # noqa
+    """
 
     STEP_MFA_METHOD = "mfa_method"
     STEP_TOTP = MfaMethod.TOTP
@@ -1811,7 +1811,7 @@ class EditOwnUserMfaView(LoggedInUserMfaMixin, UpdateView):
                 )
                 # ... and continue as below
             else:
-                return self.fail_bad_mfa_code()
+                return self.fail_bad_mfa_code()  # type: ignore[return-value]
 
         self._next_step(appstruct)
 
@@ -2058,10 +2058,11 @@ def view_tasks(req: "CamcopsRequest") -> Dict[str, Any]:
     # very nippy. In practice, this is probably an unusual setting, so we'll
     # simplify things here with a Python list regardless of the settings.
     if errors:
-        collection = []
+        collection = []  # type: ignore[var-annotated]
     else:
         collection = (
-            TaskCollection(  # SECURITY APPLIED HERE
+            # SECURITY APPLIED HERE
+            TaskCollection(  # type: ignore[assignment]
                 req=req,
                 taskfilter=taskfilter,
                 sort_method_global=TaskSortMethod.CREATION_DATE_DESC,
@@ -2307,7 +2308,7 @@ def serve_tracker_or_ctv(req: "CamcopsRequest", as_ctv: bool) -> Response:
     taskfilter = TaskFilter()
     taskfilter.task_types = [
         tc.__tablename__ for tc in task_classes
-    ]  # a bit silly...  # noqa
+    ]  # a bit silly...
     taskfilter.idnum_criteria = iddefs
     taskfilter.start_datetime = start_datetime
     taskfilter.end_datetime = end_datetime
@@ -2678,7 +2679,7 @@ def download_area(req: "CamcopsRequest") -> Dict[str, Any]:
             req=req,
         )
     else:
-        files = []  # type: List[UserDownloadFile]
+        files = []  # type: ignore[no-redef] # type: List[UserDownloadFile]
     return dict(
         files=files,
         available=bytes2human(req.user_download_bytes_available),
@@ -3858,7 +3859,7 @@ def any_records_use_user(req: "CamcopsRequest", user: User) -> bool:
     dbsession = req.dbsession
     user_id = user.id
     # Device?
-    q = CountStarSpecializedQuery(Device, session=dbsession).filter(
+    q = CountStarSpecializedQuery(Device, session=dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
         or_(
             Device.registered_by_user_id == user_id,
             Device.uploading_user_id == user_id,
@@ -3867,13 +3868,13 @@ def any_records_use_user(req: "CamcopsRequest", user: User) -> bool:
     if q.count_star() > 0:
         return True
     # SpecialNote?
-    q = CountStarSpecializedQuery(SpecialNote, session=dbsession).filter(
+    q = CountStarSpecializedQuery(SpecialNote, session=dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
         SpecialNote.user_id == user_id
     )
     if q.count_star() > 0:
         return True
     # Audit trail?
-    q = CountStarSpecializedQuery(AuditEntry, session=dbsession).filter(
+    q = CountStarSpecializedQuery(AuditEntry, session=dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
         AuditEntry.user_id == user_id
     )
     if q.count_star() > 0:
@@ -3881,9 +3882,9 @@ def any_records_use_user(req: "CamcopsRequest", user: User) -> bool:
     # Uploaded records?
     for cls in gen_orm_classes_from_base(
         GenericTabletRecordMixin
-    ):  # type: Type[GenericTabletRecordMixin]  # noqa
+    ):  # type: Type[GenericTabletRecordMixin]
         # noinspection PyProtectedMember
-        q = CountStarSpecializedQuery(cls, session=dbsession).filter(
+        q = CountStarSpecializedQuery(cls, session=dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
             or_(
                 cls._adding_user_id == user_id,
                 cls._removing_user_id == user_id,
@@ -3995,7 +3996,7 @@ def view_groups(req: "CamcopsRequest") -> Dict[str, Any]:
     dbsession = req.dbsession
     groups = (
         dbsession.query(Group).order_by(Group.name).all()
-    )  # type: List[Group]  # noqa
+    )  # type: List[Group]
     page = CamcopsPage(
         collection=groups,
         page=page_num,
@@ -4158,9 +4159,9 @@ def any_records_use_group(req: "CamcopsRequest", group: Group) -> bool:
     # Uploaded records?
     for cls in gen_orm_classes_from_base(
         GenericTabletRecordMixin
-    ):  # type: Type[GenericTabletRecordMixin]  # noqa
+    ):  # type: Type[GenericTabletRecordMixin]
         # noinspection PyProtectedMember
-        q = CountStarSpecializedQuery(cls, session=dbsession).filter(
+        q = CountStarSpecializedQuery(cls, session=dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
             cls._group_id == group_id
         )
         if q.count_star() > 0:
@@ -4335,7 +4336,7 @@ def edit_id_definition(req: "CamcopsRequest") -> Dict[str, Any]:
             ViewParam.VALIDATION_METHOD: iddef.validation_method or "",
             ViewParam.HL7_ID_TYPE: iddef.hl7_id_type or "",
             ViewParam.HL7_ASSIGNING_AUTHORITY: iddef.hl7_assigning_authority
-            or "",  # noqa
+            or "",
             ViewParam.FHIR_ID_SYSTEM: iddef.fhir_id_system or "",
         }
         rendered_form = form.render(appstruct)
@@ -4399,7 +4400,7 @@ def any_records_use_iddef(
     :func:`delete_id_definition`.)
     """
     # Helpfully, these are only referred to permanently from one place:
-    q = CountStarSpecializedQuery(PatientIdNum, session=req.dbsession).filter(
+    q = CountStarSpecializedQuery(PatientIdNum, session=req.dbsession).filter(  # type: ignore[arg-type]  # noqa: E501
         PatientIdNum.which_idnum == iddef.which_idnum
     )
     if q.count_star() > 0:
@@ -4911,7 +4912,7 @@ def forcibly_finalize(req: "CamcopsRequest") -> Response:
                 for clienttable in CLIENT_TABLE_MAP.values():
                     # noinspection PyPropertyAccess
                     count_query = (
-                        select([func.count()])
+                        select(func.count())
                         .select_from(clienttable)
                         .where(clienttable.c[FN_DEVICE_ID] == device_id)
                         .where(clienttable.c[FN_ERA] == ERA_NOW)
@@ -5020,7 +5021,7 @@ class PatientMixin(object):
     def get_form_values(self) -> Dict:
         # will populate with model_form_dict
         # noinspection PyUnresolvedReferences
-        form_values = super().get_form_values()
+        form_values = super().get_form_values()  # type: ignore[misc]
 
         patient = cast(Patient, self.object)
 
@@ -5323,7 +5324,7 @@ class EditServerCreatedPatientView(EditPatientBaseView):
             else:
                 settings = schedule_dict[ViewParam.ADVANCED][
                     ViewParam.SETTINGS
-                ]  # noqa
+                ]
 
             if pts_id is None:
                 pts = PatientTaskSchedule()
@@ -5343,12 +5344,12 @@ class EditServerCreatedPatientView(EditPatientBaseView):
 
                 updates = {}
                 if old_pts.start_datetime != start_datetime:
-                    updates[
-                        PatientTaskSchedule.start_datetime
-                    ] = start_datetime
+                    updates[PatientTaskSchedule.start_datetime] = (
+                        start_datetime
+                    )
 
                 if old_pts.schedule_id != schedule_id:
-                    updates[PatientTaskSchedule.schedule_id] = schedule_id
+                    updates[PatientTaskSchedule.schedule_id] = schedule_id  # type: ignore[index]  # noqa: E501
 
                 if old_pts.settings != settings:
                     updates[PatientTaskSchedule.settings] = settings
@@ -5538,7 +5539,7 @@ class AddPatientView(PatientMixin, CreateView):
             else:
                 settings = task_schedule[ViewParam.ADVANCED][
                     ViewParam.SETTINGS
-                ]  # noqa
+                ]
             patient_task_schedule = PatientTaskSchedule()
             patient_task_schedule.patient_pk = patient.pk
             patient_task_schedule.schedule_id = schedule_id
@@ -5707,8 +5708,6 @@ def view_patient_task_schedules(req: "CamcopsRequest") -> Dict[str, Any]:
         .filter(Patient._group_id.in_(allowed_group_ids))
         .filter(Patient._device_id == server_device.id)
         .order_by(Patient.surname, Patient.forename)
-        .options(joinedload("task_schedules"))
-        .options(joinedload("idnums"))
     )
 
     page = SqlalchemyOrmPage(
@@ -5736,7 +5735,10 @@ def view_patient_task_schedule(req: "CamcopsRequest") -> Dict[str, Any]:
         req.dbsession.query(PatientTaskSchedule)
         .filter(PatientTaskSchedule.id == pts_id)
         .options(
-            joinedload("patient.idnums"), joinedload("task_schedule.items")
+            joinedload(PatientTaskSchedule.patient).joinedload(Patient.idnums),
+            joinedload(PatientTaskSchedule.task_schedule).joinedload(
+                TaskSchedule.items
+            ),
         )
         .one_or_none()
     )
@@ -5783,7 +5785,7 @@ class TaskScheduleMixin(object):
 
     def get_object(self) -> Any:
         # noinspection PyUnresolvedReferences
-        schedule = cast(TaskSchedule, super().get_object())
+        schedule = cast(TaskSchedule, super().get_object())  # type: ignore[misc]  # noqa: E501
 
         if not schedule.user_may_edit(self.request):
             _ = self.request.gettext
@@ -5901,7 +5903,7 @@ class TaskScheduleItemMixin(object):
         # noinspection PyUnresolvedReferences
         return self.request.route_url(
             Routes.VIEW_TASK_SCHEDULE_ITEMS,
-            _query={ViewParam.SCHEDULE_ID: self.get_schedule_id()},
+            _query={ViewParam.SCHEDULE_ID: self.get_schedule_id()},  # type: ignore[attr-defined]  # noqa: E501
         )
 
 
@@ -5912,7 +5914,7 @@ class EditTaskScheduleItemMixin(TaskScheduleItemMixin):
 
     def set_object_properties(self, appstruct: Dict[str, Any]) -> None:
         # noinspection PyUnresolvedReferences
-        super().set_object_properties(appstruct)
+        super().set_object_properties(appstruct)  # type: ignore[misc]
 
         due_from = appstruct.get(ViewParam.DUE_FROM)
         due_within = appstruct.get(ViewParam.DUE_WITHIN)
@@ -5921,7 +5923,7 @@ class EditTaskScheduleItemMixin(TaskScheduleItemMixin):
 
     def get_schedule(self) -> TaskSchedule:
         # noinspection PyUnresolvedReferences
-        schedule_id = self.get_schedule_id()
+        schedule_id = self.get_schedule_id()  # type: ignore[attr-defined]
 
         schedule = (
             self.request.dbsession.query(TaskSchedule)
@@ -6098,7 +6100,7 @@ class SendPatientEmailBaseView(FormView):
     form_class = SendEmailForm
     template_name = "send_patient_email.mako"
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         self._pts = None
 
         super().__init__(*args, **kwargs)

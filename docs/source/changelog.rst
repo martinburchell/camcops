@@ -36,7 +36,38 @@ Quick links:
 - :ref:`2021 <changelog_2021>`
 - :ref:`2022 <changelog_2022>`
 - :ref:`2023 <changelog_2023>`
+- :ref:`2024 <changelog_2024>`
+- :ref:`2025 <changelog_2025>`
 
+- :ref:`v2.3.3 <changelog_v2.3.3>`
+- :ref:`v2.3.4 <changelog_v2.3.4>`
+- :ref:`v2.3.5 <changelog_v2.3.5>`
+- :ref:`v2.3.6 <changelog_v2.3.6>`
+- :ref:`v2.3.7 <changelog_v2.3.7>`
+- :ref:`v2.3.8 <changelog_v2.3.8>`
+- :ref:`v2.4.0 <changelog_v2.4.0>`
+- :ref:`v2.4.1 <changelog_v2.4.1>`
+- :ref:`v2.4.2 <changelog_v2.4.2>`
+- :ref:`v2.4.3 <changelog_v2.4.3>`
+- :ref:`v2.4.4 <changelog_v2.4.4>`
+- :ref:`v2.4.5 <changelog_v2.4.5>`
+- :ref:`v2.4.6 <changelog_v2.4.6>`
+- :ref:`v2.4.7 <changelog_v2.4.7>`
+- :ref:`v2.4.8 <changelog_v2.4.8>`
+- :ref:`v2.4.9 <changelog_v2.4.9>`
+- :ref:`v2.4.10 <changelog_v2.4.10>`
+- :ref:`v2.4.11 <changelog_v2.4.11>`
+- :ref:`v2.4.12 <changelog_v2.4.12>`
+- :ref:`v2.4.13 <changelog_v2.4.13>`
+- :ref:`v2.4.14 <changelog_v2.4.14>`
+- :ref:`v2.4.15 <changelog_v2.4.15>`
+- :ref:`v2.4.16 <changelog_v2.4.16>`
+- :ref:`v2.4.17 <changelog_v2.4.17>`
+- :ref:`v2.4.18 <changelog_v2.4.18>`
+- :ref:`v2.4.19 <changelog_v2.4.19>`
+- :ref:`v2.4.20 <changelog_v2.4.20>`
+- :ref:`v2.4.21 <changelog_v2.4.21>`
+- :ref:`v2.4.22 <changelog_v2.4.22>`
 
 Contributors
 ------------
@@ -2158,10 +2189,10 @@ Current C++/SQLite client, Python/SQLAlchemy server
   which wasn't converting to UTC properly.
 
 
-.. _changelog_v2_3_3:
+.. _changelog_v2.3.3:
 
-**Client and server v2.3.3**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Client and server v2.3.3, released 15 Jun 2019**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Windows service.
 
@@ -3456,7 +3487,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
   places.
 
 
-.. _changelog_v2_4_8:
+.. _changelog_v2.4.8:
 
 **Client and server v2.4.8, released 9 Jul 2021**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3478,7 +3509,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
   https://github.com/ucam-department-of-psychiatry/camcops/issues/153
 
 
-.. _changelog_v2_4_9:
+.. _changelog_v2.4.9:
 
 **Client and server v2.4.9, released 6 Aug 2021**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3500,7 +3531,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
   <cpft_covid_medical>` (Database revision 0068).
 
 
-.. _changelog_v2_4_10:
+.. _changelog_v2.4.10:
 
 **Server v2.4.10, released 27 Sep 2021**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3520,7 +3551,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
   UUIDs: https://github.com/ucam-department-of-psychiatry/camcops/issues/192
 
 
-.. _changelog_v2_4_11:
+.. _changelog_v2.4.11:
 
 **Client and server v2.4.11, released 8 Oct 2021**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3550,7 +3581,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
 2022
 ~~~~
 
-.. _changelog_v2_4_12:
+.. _changelog_v2.4.12:
 
 **Server v2.4.12, released 20 Jan 2022**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3609,7 +3640,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
 
   - Bugfix for hacking the ``pymysql`` driver to support Pendulum date/time
     objects properly. The bug manifested during reindexing, and was as
-    documented above in :ref:`v2.3.3 <changelog_v2_3_3>`.
+    documented above in :ref:`v2.3.3 <changelog_v2.3.3>`.
 
 - Update SNOMED code fetcher. Replace 32537008 with 165172002 in
   PsychiatricClerking. Other minor tweaks.
@@ -3649,7 +3680,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
   https://github.com/ucam-department-of-psychiatry/camcops/issues/226
 
 
-.. _changelog_v2_4_13:
+.. _changelog_v2.4.13:
 
 **Client and server v2.4.13, released 18 Aug 2022**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3684,6 +3715,7 @@ Current C++/SQLite client, Python/SQLAlchemy server
 - **New task:** :ref:`Psychosocial fActors Relevant to BrAin DISorders in
   Europe-24 (PARADISE-24) <paradise24>`. (Database revision 0076.)
 
+.. _changelog_v2.4.14:
 
 **Server v2.4.14, released 17 Nov 2022**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3709,7 +3741,8 @@ Current C++/SQLite client, Python/SQLAlchemy server
 2023
 ~~~~
 
-.. _changelog_v2_4_15:
+
+.. _changelog_v2.4.15:
 
 **Client and server v2.4.15, released 24 Mar 2023**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3766,7 +3799,8 @@ Current C++/SQLite client, Python/SQLAlchemy server
 - Use SecureTransport instead of OpenSSL with Qt on iOS client.
   https://github.com/ucam-department-of-psychiatry/camcops/issues/278
 
-.. _changelog_v2_4_16:
+
+.. _changelog_v2.4.16:
 
 **Client and server v2.4.16, released 13 Jun 2023**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -3796,5 +3830,165 @@ Current C++/SQLite client, Python/SQLAlchemy server
   text is greater in height than the images.
 
 
-**Client and server v2.4.17,  IN PROGRESS**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _changelog_v2.4.17:
+
+**Client and server v2.4.17, released 19 Aug 2023**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Remove odd newlines from CAPS task summary.
+
+- No change in functionality of the client. Client release to Google Play Store
+  only. Target Android version now 33.
+
+
+.. _changelog_2024:
+
+2024
+~~~~
+
+.. _changelog_v2.4.18:
+
+**Client and server v2.4.18, released 05 Feb 2024**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Make the "Register me" and "More options" buttons more legible on Android.
+
+- When uploading in single user mode, if the server version has changed store the
+  new version in the client database and refetch the strings. Previously the user
+  would see a generic error message and the only way to fix it was to re-register
+  the patient.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/263
+
+- Support for a clinician to configure IDED-3D settings for single user mode on
+  a per-patient basis.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/314
+
+- Supported SQLAlchemy version now 1.4.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/172
+
+- New task: :ref:`Compulsive Exercise Test (CET) <cet>`. (Database revision 0084.)
+
+- Qt version is now 6.5.3. Qt now builds with FFmpeg for multimedia on all
+  platforms except iOS (following Qt official releases).
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/173
+
+- OpenSSL version is now 3.0.12. 1.1.1x has reached end-of-life.
+
+- SQL Cipher version is now 4.5.5.
+
+- Eigen version is now 3.4.0.
+
+- The photo question (QuPhoto class) reverts to the QCamera method
+  (C++ implementation) because of multiple issues with the QML method.
+  See ``tablet_qt/widgets/cameraqcamera.h``.
+
+
+.. _changelog_v2.4.19:
+
+**Client and server v2.4.19, released 27 Jun 2024**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Additional optional LGPL licensing for some Qt height-for-width layout code
+  to make it suitable for inclusion in libraries elsewhere.
+
+- Fix bug where the upload icon would remain visible if the activity log were enabled and
+  the upload failed.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/341
+
+- Make it easier to turn on error logging in the event of a network operation failure.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/336
+
+- The Patient Registration Dialog now displays the server URL and access key for
+  the previous registration, if available. This should reduce the amount of data
+  entry needed following a network or registration failure.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/104
+
+- Provide more information if the app cannot delete the SQLite databases when a user
+  has forgotten their password. Fix a bug where if the initial password dialog was
+  aborted, the next attempt to set up a password would fail.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/346
+
+- Fix undefined behaviour if a task in a taskchain was aborted due to e.g. a missing
+  IP setting. Sometimes the tasks would be displayed if the back button was pressed.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/350
+
+- Fix the Qt build for 32-bit and 64-bit Android emulator.
+
+- Fix the display of various dialogues on smaller screens, particulary when the device
+  is rotated.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/347
+
+- New task: :ref:`The Adult Autism Spectrum Quotient (AQ) <aq>`. (Database revision 0085.)
+
+- Fix a bug where if the user entered an incorrect password and then cancelled the
+  dialog to prompt them to delete the database, it was impossible for them to then
+  enter the correct password.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/353
+
+.. _changelog_v2.4.20:
+
+**Client and server v2.4.20, released 13 Aug 2024**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fix the BMI task on both the client and server to avoid a division by zero
+  error when the user enters a zero height.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/366
+
+- Fix bugs in the "strict" validation of double-precision floating-point values
+  where valid values were being rejected.
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/368
+
+- Fix the installer to set the SSL options in the config file only if using
+  HTTPS directly.
+
+- Modify the task count report to split by day of month.
+
+.. _changelog_v2.4.21:
+
+**Server v2.4.21, released 14 Aug 2024**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Bump ``gunicorn`` to 23.0.0 to fix CVE-2024-1135
+
+
+.. _changelog_2025:
+
+2025
+~~~~
+
+.. _changelog_v2.4.22:
+
+**Client and server v2.4.22, released 16 Jul 2025**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Update the Docker image to use Debian 11. Debian 10 has now reached end-of-life.
+
+- **Minimum Python version now Python 3.9.** Python 3.11 and 3.12 supported.
+
+- Fix cursor placement when entering the access key on iOS. The workaround for
+  https://bugreports.qt.io/browse/QTBUG-115756 is now only applied for Android.
+
+- When building the Docker image, don't try to pull camcops_server from https://hub.docker.com
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/265
+
+- Update to use SQLAlchemy 2.0 (Database revision 0086 for minor changes to
+  comments for HAMD and HAMD7).
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/322
+
+- Display the question on the server side for :ref:`The Clinical Impairment Assessment questionnaire (CIA)
+  <cia>`.
+
+- New task: :ref:`Eating and Meal Preparation Skills Assessment (EMPSA)
+  <empsa>`. (Database revision 0087.)
+
+- Warn the user if duplicate server-created patient idenitifers exist in the same group.
+
+- Qt version now 6.5.5. This fixes the display of the About Qt dialog on iOS
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/308
+
+- Fix automatic patient registration by URL for Android 12+ using applink verification at
+  https://ucam-department-of-psychiatry.github.io/camcops/register
+  https://github.com/ucam-department-of-psychiatry/camcops/issues/335
+
+**Client and server v2.4.23, IN PROGRESS**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -25,16 +25,18 @@
 extern const QString KIRBY_DEFAULT_CURRENCY;
 extern const bool KIRBY_DEFAULT_CURRENCY_SYMBOL_FIRST;
 
-
 class KirbyRewardPair
 {
 public:
     // Must accept zero arguments to live in a QVector.
     KirbyRewardPair(
-            int sir = 0, int ldr = 0, int delay_days = 0,
-            const QVariant& chose_ldr = false,  // result, if desired
-            const QString& currency = KIRBY_DEFAULT_CURRENCY,
-            bool currency_symbol_first = KIRBY_DEFAULT_CURRENCY_SYMBOL_FIRST);
+        int sir = 0,
+        int ldr = 0,
+        int delay_days = 0,
+        const QVariant& chose_ldr = false,  // result, if desired
+        const QString& currency = KIRBY_DEFAULT_CURRENCY,
+        bool currency_symbol_first = KIRBY_DEFAULT_CURRENCY_SYMBOL_FIRST
+    );
 
     // Return the question.
     QString sirString() const;
@@ -53,6 +55,7 @@ public:
     // - If no choice has been recorded, returns false.
     // - If the k value equals the implied indifference point exactly (meaning
     //   that the subject should not care), return true.
+    // - Otherwise, return whether the choice was consistent with k.
     bool choiceConsistent(double k) const;
 
 public:

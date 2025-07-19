@@ -7,74 +7,129 @@ on:
     push:
         paths:
             - tablet_qt/tools/build_qt.py
+            - .github/scripts/change_apt_mirror.sh
+            - .github/scripts/free_up_disk_space.sh
+            - .github/scripts/install_msys_packages.ps1
             - .github/workflows/build-qt.yml
 jobs:
     build-qt:
         strategy:
             matrix:
                 include:
-                    - name: ubuntu-20.04
-                      os: ubuntu-20.04
                     - name: ubuntu-22.04
                       os: ubuntu-22.04
-                    - name: windows-2019
-                      os: windows-2019
+                    - name: windows-2022
+                      os: windows-2022
         runs-on: ${{ matrix.os }}
         steps:
-            - uses: actions/checkout@v3
-            - uses: actions/setup-python@v4
+            - uses: actions/checkout@v4
+            - name: Free up disk space
+              # The runner on Ubuntu will run out of space so we remove some of the things
+              # we don't need.
+              if: runner.os == 'Linux'
+              run: |
+                  set -eux -o pipefail
+                  ${GITHUB_WORKSPACE}/.github/scripts/free_up_disk_space.sh
+            - uses: actions/setup-python@v5
               with:
-                  python-version: 3.8
-            - name: Ubuntu 20.04 prerequisites
-              if: matrix.os == 'ubuntu-20.04'
+                  python-version: 3.9
+            - name: Common Linux prerequisites
+              if: runner.os == 'Linux'
               run: |
                   set -eux -o pipefail
                   ${GITHUB_WORKSPACE}/.github/scripts/change_apt_mirror.sh
                   ${GITHUB_WORKSPACE}/.github/scripts/add_apt_sources.sh
-                  sudo apt-get -y build-dep qt5-default
-                  sudo apt-get -y install build-essential perl python git
-                  sudo apt-get -y install ninja-build ccache
-                  sudo apt-get -y install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
-                  sudo apt-get -y install flex bison gperf libicu-dev libxslt-dev ruby yasm
-                  sudo apt-get -y install libxcursor-dev libxcomposite-dev libxdamage-dev libxrandr-dev libxtst-dev libxss-dev libdbus-1-dev libevent-dev libfontconfig1-dev libcap-dev libpulse-dev libudev-dev libpci-dev libnss3-dev libasound2-dev libegl1-mesa-dev nodejs
-                  sudo apt-get -y install libxcb-xinerama0-dev
-                  sudo apt-get -y install libdrm-dev libxcb-glx0-dev libzstd-dev
-                  sudo apt-get -y install libclang-10-dev libclang-11-dev libclang-12-dev
+                  sudo apt-get -y install \
+                  autoconf \
+                  automake \
+                  bison \
+                  build-essential \
+                  ccache \
+                  cmake \
+                  flex \
+                  git \
+                  gperf \
+                  libass-dev \
+                  libdrm-dev \
+                  libegl1-mesa-dev \
+                  libfontconfig1-dev \
+                  libfreetype6-dev \
+                  libgnutls28-dev \
+                  libmp3lame-dev \
+                  libnss3-dev \
+                  libpulse-dev \
+                  libsdl2-dev \
+                  libtool \
+                  libva-dev \
+                  libvdpau-dev \
+                  libvorbis-dev \
+                  libx11-xcb-dev \
+                  '^libxcb.*-dev' \
+                  libxcomposite-dev \
+                  libxcursor-dev \
+                  libxdamage-dev \
+                  libxi-dev \
+                  libxkbcommon-dev \
+                  libxkbcommon-x11-dev \
+                  libxrandr-dev \
+                  libxrender-dev \
+                  meson \
+                  ninja-build \
+                  nodejs \
+                  pkg-config \
+                  texinfo \
+                  wget \
+                  yasm \
+                  zlib1g-dev
+
             - name: Ubuntu 22.04 prerequisites
               if: matrix.os == 'ubuntu-22.04'
               run: |
                   set -eux -o pipefail
-                  ${GITHUB_WORKSPACE}/.github/scripts/change_apt_mirror.sh
-                  ${GITHUB_WORKSPACE}/.github/scripts/add_apt_sources.sh
-                  sudo apt-get -y install libunwind-dev
-                  sudo apt-get -y install build-essential python3 git
-                  sudo apt-get -y install ninja-build clang ccache
-                  sudo apt-get -y install '^libxcb.*-dev' libx11-xcb-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
-                  sudo apt-get -y install flex bison gperf yasm
-                  sudo apt-get -y install libxcursor-dev libxcomposite-dev libxdamage-dev libxrandr-dev libfontconfig1-dev libpulse-dev libnss3-dev libegl1-mesa-dev nodejs
-                  sudo apt-get -y install libdrm-dev
-                  sudo apt-get -y install libatspi2.0-dev libbluetooth-dev libclang-dev libcups2-dev
-                  sudo apt-get -y install libfreetype6-dev
-                  sudo apt-get -y install libhunspell-dev libopengl-dev
-                  sudo apt-get -y install libts-dev libx11-dev
-                  sudo apt-get -y install libxext-dev
-                  sudo apt-get -y install libxfixes-dev
-                  sudo apt-get -y install libxkbfile-dev libxshmfence-dev
-                  sudo apt-get -y install libxshmfence1 llvm
-            - uses: ilammy/msvc-dev-cmd@v1
-              with:
-                  arch: x64
+                  sudo apt-get -y install \
+                  clang \
+                  libatspi2.0-dev \
+                  libbluetooth-dev \
+                  libclang-13-dev \
+                  libclang-14-dev \
+                  libclang-15-dev \
+                  libcups2-dev \
+                  libfreetype6-dev \
+                  libhunspell-dev \
+                  libopengl-dev \
+                  libts-dev \
+                  libunwind-dev \
+                  libx11-dev \
+                  libxext-dev \
+                  libxfixes-dev \
+                  libxkbfile-dev \
+                  libxshmfence1 \
+                  libxshmfence-dev \
+                  llvm \
+                  python3
+
             - name: Windows prerequisites
-              if: matrix.os == 'windows-2019'
+              if: matrix.os == 'windows-2022'
               run: |
                   $ErrorActionPreference = "Stop"
-                  choco install ninja nasm --yes --no-progress
+                  choco install ninja nasm msys2 --yes --no-progress
                   choco install ccache --version 3.7.12 --yes --no-progress
-                  "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build" >> $env:GITHUB_PATH
                   # Chocolatey uses the Windows installer, which doesn't update Path
                   # https://bugzilla.nasm.us/show_bug.cgi?id=3392224
-                  "C:\Program Files\NASM" >> $env:GITHUB_PATH
+                  echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+                  # It looks like msys2 doesn't update the Path either:
+                  echo "C:\tools\msys64" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+                  echo "C:\tools\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+                  # For vcvarsall.bat
+                  echo "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+                  # Ensure Strawberry perl is first for better filename support
+                  echo "C:\Strawberry\perl\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
+            - name: Windows FFmpeg prerequisites
+              if: matrix.os == 'windows-2022'
+              run: |
+                  $ErrorActionPreference = "Stop"
+                  ${{ github.workspace }}\.github\scripts\install_msys_packages.ps1
             - name: restore ccache
               id: ccache
               uses: actions/cache@v3
@@ -116,6 +171,7 @@ jobs:
                   ninja --version
                   perl --version
                   tar --version
+                  yasm --version
                   echo Environment:
                   printenv
 
@@ -152,10 +208,43 @@ jobs:
               if: runner.os == 'Linux'
               run: |
                   set -eux -o pipefail
+                  echo "Free space:"
+                  df -h
                   source ${HOME}/venv/bin/activate
                   export CAMCOPS_QT6_BASE_DIR=${HOME}/qt_local_build
                   cd tablet_qt/tools
                   ./build_qt.py --build_linux_x86_64
+            - name: Create tarfile
+              if: matrix.os == 'ubuntu-22.04'
+              run: |
+                  set -eux -o pipefail
+                  echo "Free space:"
+                  df -h
+                  tar -czvf /tmp/qt.tgz \
+                      ${HOME}/qt_local_build/ffmpeg_linux_x86_64_build \
+                      ${HOME}/qt_local_build/openssl_linux_x86_64_build \
+                      ${HOME}/qt_local_build/qt_linux_x86_64_install \
+                      ${HOME}/qt_local_build/sqlcipher_linux_x86_64
+
+            - name: Work out tag
+              # TODO: This seems to be ignored and instead the release gets
+              # called untagged-<some hash>
+              if: matrix.os == 'ubuntu-22.04'
+              id: vars
+              run: |
+                  set -eux -o pipefail
+                  echo "tag=qt_${GITHUB_SHA}" >> $GITHUB_OUTPUT
+            - name: Release Qt
+              if: matrix.os == 'ubuntu-22.04'
+              uses: ncipollo/release-action@v1
+              with:
+                  artifacts: "/tmp/qt.tgz"
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  prerelease: true
+                  draft: true
+                  body: Qt and associated libraries for building and testing the CamCOPS app
+                  name: Qt and other libraries for CamCOPS
+                  tag: ${{ steps.vars.outputs.tag }}
 
             - name: Windows Build Qt
               if: runner.os == 'Windows'

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_policy.py
 
@@ -43,7 +41,7 @@ configuration).
 import io
 import logging
 import tokenize
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from cardinal_pythonlib.dicts import reversedict
 from cardinal_pythonlib.logs import BraceStyleAdapter
@@ -205,7 +203,7 @@ def quad_or(x: QuadState, y: QuadState) -> QuadState:
 
 
 def debug_wrapper(fn: Callable, name: str) -> Callable:
-    def wrap(*args, **kwargs) -> QuadState:
+    def wrap(*args: Any, **kwargs: Any) -> QuadState:
         result = fn(*args, **kwargs)
         arglist = [str(x) for x in args] + [
             f"{k}={v}" for k, v in kwargs.items()
@@ -453,7 +451,7 @@ class TokenizedPolicy(object):
         if name in POLICY_TOKEN_DICT:
             return POLICY_TOKEN_DICT[name]
         if name.startswith(TOKEN_IDNUM_PREFIX):
-            nstr = name[len(TOKEN_IDNUM_PREFIX) :]  # noqa: E203
+            nstr = name[len(TOKEN_IDNUM_PREFIX) :]
             try:
                 return int(nstr)
             except (TypeError, ValueError):
@@ -483,7 +481,7 @@ class TokenizedPolicy(object):
         except tokenize.TokenError:
             # something went wrong
             return []
-        tokens = [cls.name_to_token(k) for k in tokenstrings]
+        tokens = [cls.name_to_token(k) for k in tokenstrings]  # type: ignore[arg-type]  # noqa: E501
         if any(t == BAD_TOKEN for t in tokens):
             # There's something bad in there.
             return []
@@ -1159,7 +1157,7 @@ class TokenizedPolicy(object):
             return (
                 chunk_value,
                 subchunkend + 1,
-            )  # to move past the closing bracket  # noqa
+            )  # to move past the closing bracket
         elif token == TK_NOT:
             next_value, next_index = self._content_chunk_value(
                 tokens, start + 1, content_token_processor

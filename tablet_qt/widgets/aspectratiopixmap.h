@@ -18,6 +18,14 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
+
 #pragma once
 
 // http://stackoverflow.com/questions/5653114/display-image-in-qt-to-fit-label-size
@@ -35,7 +43,6 @@
 #include <QWidget>
 class QMouseEvent;
 class QResizeEvent;
-
 
 class AspectRatioPixmap : public QWidget
 {
@@ -59,11 +66,12 @@ class AspectRatioPixmap : public QWidget
     // Compare CanvasWidget, which also does that.
 
     Q_OBJECT
-public:
 
+public:
     // Constructor. Sets image.
-    explicit AspectRatioPixmap(QPixmap* pixmap = nullptr,
-                               QWidget* parent = nullptr);
+    explicit AspectRatioPixmap(
+        QPixmap* pixmap = nullptr, QWidget* parent = nullptr
+    );
 
     // Standard Qt widget overrides.
     virtual bool hasHeightForWidth() const override;
@@ -75,7 +83,6 @@ public:
     void clear();
 
 protected:
-
     // Standard Qt widget overrides.
     virtual void mousePressEvent(QMouseEvent* event) override;
     virtual void paintEvent(QPaintEvent* event) override;

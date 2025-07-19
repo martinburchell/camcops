@@ -41,7 +41,7 @@ import shutil
 import sys
 from tempfile import NamedTemporaryFile
 import textwrap
-from typing import Callable, Dict, Iterable, NoReturn, TextIO, Type, Union
+from typing import Any, Callable, Dict, IO, Iterable, NoReturn, Type, Union
 import urllib.parse
 
 # See installer-requirements.txt
@@ -99,7 +99,7 @@ class DockerPath:
 
     VENV_DIR = os.path.join(ROOT_DIR, "venv")
     CAMCOPS_INSTALL_DIR = os.path.join(
-        VENV_DIR, "lib", "python3.8", "site-packages"
+        VENV_DIR, "lib", "python3.9", "site-packages"
     )
 
 
@@ -608,6 +608,17 @@ class Installer:
         self.configure_config()
 
     def configure_config(self) -> None:
+        ssl_certificate = ""
+        ssl_private_key = ""
+
+        if self.use_https():
+            ssl_certificate = os.path.join(
+                DockerPath.CONFIG_DIR, "camcops.crt"
+            )
+            ssl_private_key = os.path.join(
+                DockerPath.CONFIG_DIR, "camcops.key"
+            )
+
         replace_dict = {
             "db_server": os.getenv(
                 InstallerEnvVar.MYSQL_SERVER,
@@ -625,12 +636,8 @@ class Installer:
                 DockerEnvVar.MYSQL_DATABASE_NAME,
             ),
             "host": "0.0.0.0",
-            "ssl_certificate": os.path.join(
-                DockerPath.CONFIG_DIR, "camcops.crt"
-            ),
-            "ssl_private_key": os.path.join(
-                DockerPath.CONFIG_DIR, "camcops.key"
-            ),
+            "ssl_certificate": ssl_certificate,
+            "ssl_private_key": ssl_private_key,
         }
 
         self.search_replace_file(self.config_full_path(), replace_dict)
@@ -845,7 +852,7 @@ class Installer:
     def get_ssl_private_key(self) -> str:
         return self.get_user_file("Select the SSL private key file:")
 
-    def get_create_mysql_container(self) -> bool:
+    def get_create_mysql_container(self) -> str:
         return self.get_user_boolean(
             "Create a MySQL container? "
             "Answer 'n' to use an external database (y/n)"
@@ -991,11 +998,14 @@ class Installer:
         return self.prompt(text, validator=EmailValidator())
 
     def get_user_input(
-        self, text: str, default: str = "", validator=NotEmptyValidator()
+        self,
+        text: str,
+        default: str = "",
+        validator: Validator = NotEmptyValidator(),
     ) -> str:
         return self.prompt(text, default=default, validator=validator)
 
-    def prompt(self, text: str, *args, **kwargs) -> str:
+    def prompt(self, text: str, *args: Any, **kwargs: Any) -> str:
         """
         Shows a prompt and returns user input.
         """
@@ -1029,7 +1039,7 @@ class Installer:
 
     @staticmethod
     def _write_envvars_to_file(
-        f: TextIO, include_passwords: bool = False
+        f: IO[str], include_passwords: bool = False
     ) -> None:
         """
         We typically avoid saving passwords. Note that some of the config files
@@ -1098,7 +1108,7 @@ class Installer:
         with open(filename, "r") as f:
             contents = f.read()
 
-        for (search, replace) in replace_dict.items():
+        for search, replace in replace_dict.items():
             if replace is None:
                 self.fail(f"Can't replace '{search}' with None")
 

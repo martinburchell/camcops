@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0052_group_ip_use.py
 
@@ -57,8 +55,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         "_security_ip_use",
         sa.Column(
@@ -120,7 +119,7 @@ def upgrade():
 
 
 # noinspection PyPep8,PyTypeChecker
-def downgrade():
+def downgrade() -> None:
     with op.batch_alter_table("_security_groups", schema=None) as batch_op:
         batch_op.drop_constraint(
             batch_op.f("fk__security_groups_ip_use_id"), type_="foreignkey"

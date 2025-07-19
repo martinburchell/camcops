@@ -19,18 +19,18 @@
 */
 
 #include "qutext.h"
+
 #include <QDebug>
+
 #include "lib/uifunc.h"
 #include "lib/widgetfunc.h"
 #include "questionnairelib/questionnaire.h"
-#include "widgets/labelwordwrapwide.h"
-
 
 QuText::QuText(const QString& text, FieldRefPtr fieldref, QObject* parent) :
     QuElement(parent),
     m_text(text),
     m_fieldref(fieldref),
-    m_fontsize( uiconst::FontSize::Normal),
+    m_fontsize(uiconst::FontSize::Normal),
     m_bold(false),
     m_italic(false),
     m_warning(false),
@@ -41,17 +41,19 @@ QuText::QuText(const QString& text, FieldRefPtr fieldref, QObject* parent) :
     m_forced_fontsize_pt(-1)
 {
     if (fieldref) {
-        connect(m_fieldref.data(), &FieldRef::valueChanged,
-                this, &QuText::fieldValueChanged);
+        connect(
+            m_fieldref.data(),
+            &FieldRef::valueChanged,
+            this,
+            &QuText::fieldValueChanged
+        );
     }
 }
-
 
 QuText::QuText(const QString& text, QObject* parent) :
     QuText(text, nullptr, parent)  // delegating constructor
 {
 }
-
 
 QuText::QuText(FieldRefPtr fieldref, QObject* parent) :
     QuText(QString(), fieldref, parent)  // delegating constructor
@@ -59,13 +61,11 @@ QuText::QuText(FieldRefPtr fieldref, QObject* parent) :
     Q_ASSERT(m_fieldref);
 }
 
-
 QuText* QuText::setFontSize(uiconst::FontSize fontsize)
 {
     m_fontsize = fontsize;
     return this;
 }
-
 
 QuText* QuText::setBig(const bool big)
 {
@@ -73,13 +73,11 @@ QuText* QuText::setBig(const bool big)
     return this;
 }
 
-
 QuText* QuText::setBold(const bool bold)
 {
     m_bold = bold;
     return this;
 }
-
 
 QuText* QuText::setItalic(const bool italic)
 {
@@ -87,13 +85,11 @@ QuText* QuText::setItalic(const bool italic)
     return this;
 }
 
-
 QuText* QuText::setWarning(const bool warning)
 {
     m_warning = warning;
     return this;
 }
-
 
 QuText* QuText::setFormat(const Qt::TextFormat format)
 {
@@ -101,13 +97,11 @@ QuText* QuText::setFormat(const Qt::TextFormat format)
     return this;
 }
 
-
 QuText* QuText::setOpenLinks(const bool open_links)
 {
     m_open_links = open_links;
     return this;
 }
-
 
 QuText* QuText::setTextAlignment(const Qt::Alignment alignment)
 {
@@ -115,14 +109,12 @@ QuText* QuText::setTextAlignment(const Qt::Alignment alignment)
     return this;
 }
 
-
 QuText* QuText::setTextAndWidgetAlignment(const Qt::Alignment alignment)
 {
     setTextAlignment(alignment);
     setWidgetAlignment(alignment);
     return this;
 }
-
 
 QPointer<QWidget> QuText::makeWidget(Questionnaire* questionnaire)
 {
@@ -134,16 +126,16 @@ QPointer<QWidget> QuText::makeWidget(Questionnaire* questionnaire)
     }
     m_label = new LabelWordWrapWide(text);
     const int fontsize = questionnaire->fontSizePt(m_fontsize);
-    setWidgetFontSize(m_forced_fontsize_pt > 0 ? m_forced_fontsize_pt
-                                               : fontsize);
+    setWidgetFontSize(
+        m_forced_fontsize_pt > 0 ? m_forced_fontsize_pt : fontsize
+    );
     m_label->setTextFormat(m_text_format);
     m_label->setOpenExternalLinks(m_open_links);
     m_label->setAlignment(m_text_alignment);
     // ... this is QLabel::setAlignment; see
-    //     http://doc.qt.io/qt-5/qlabel.html#alignment-prop
+    //     https://doc.qt.io/qt-6.5/qlabel.html#alignment-prop
     return QPointer<QWidget>(m_label);
 }
-
 
 void QuText::fieldValueChanged(const FieldRef* fieldref)
 {
@@ -154,13 +146,11 @@ void QuText::fieldValueChanged(const FieldRef* fieldref)
     m_label->setText(fieldref->valueString());
 }
 
-
 void QuText::forceFontSize(const int fontsize_pt, const bool repolish)
 {
     m_forced_fontsize_pt = fontsize_pt;
     setWidgetFontSize(m_forced_fontsize_pt, repolish);
 }
-
 
 void QuText::setText(const QString& text, const bool repolish)
 {
@@ -174,7 +164,6 @@ void QuText::setText(const QString& text, const bool repolish)
     }
 }
 
-
 void QuText::setWidgetFontSize(const int fontsize_pt, const bool repolish)
 {
     if (!m_label) {
@@ -187,7 +176,6 @@ void QuText::setWidgetFontSize(const int fontsize_pt, const bool repolish)
         repolishWidget();
     }
 }
-
 
 void QuText::repolishWidget()
 {

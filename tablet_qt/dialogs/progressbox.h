@@ -21,9 +21,8 @@
 #pragma once
 #include <QProgressDialog>
 
-
 // Prototypical use: modal, as per
-// http://doc.qt.io/qt-5.7/qprogressdialog.html#details
+// https://doc.qt.io/qt-6.5/qprogressdialog.html#details
 
 class ProgressBox : public QProgressDialog
 {
@@ -32,6 +31,14 @@ class ProgressBox : public QProgressDialog
     // NOT CURRENTLY USED.
 
     Q_OBJECT
+
 public:
-    ProgressBox(const QString& label, int n_steps, QWidget* parent);
+    ProgressBox(
+        const QString& label_text,
+        const QString& cancel_button_text,
+        int minimum,
+        int maximum,
+        QWidget* parent = nullptr,
+        Qt::WindowFlags f = Qt::WindowFlags()
+    );
 };

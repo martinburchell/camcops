@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/bmi.py
 
@@ -33,7 +31,7 @@ import cardinal_pythonlib.rnc_web as ws
 from fhirclient.models.codeableconcept import CodeableConcept
 from fhirclient.models.coding import Coding
 from fhirclient.models.quantity import Quantity
-from sqlalchemy.sql.schema import Column
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.sql.sqltypes import Float, UnicodeText
 
 from camcops_server.cc_modules.cc_constants import CssClass, FHIRConst as Fc
@@ -48,7 +46,7 @@ from camcops_server.cc_modules.cc_snomed import (
 )
 from camcops_server.cc_modules.cc_summaryelement import SummaryElement
 from camcops_server.cc_modules.cc_sqla_coltypes import (
-    CamcopsColumn,
+    mapped_camcops_column,
     PermittedValueChecker,
 )
 from camcops_server.cc_modules.cc_task import Task, TaskHasPatientMixin
@@ -72,7 +70,7 @@ M_DP = 3
 CM_DP = 1
 
 
-class Bmi(TaskHasPatientMixin, Task):
+class Bmi(TaskHasPatientMixin, Task):  # type: ignore[misc]
     """
     Server implementation of the BMI task.
     """
@@ -81,25 +79,21 @@ class Bmi(TaskHasPatientMixin, Task):
     shortname = "BMI"
     provides_trackers = True
 
-    height_m = CamcopsColumn(
-        "height_m",
-        Float,
+    height_m: Mapped[Optional[float]] = mapped_camcops_column(
         permitted_value_checker=PermittedValueChecker(minimum=0),
         comment="height (m)",
     )
-    mass_kg = CamcopsColumn(
-        "mass_kg",
-        Float,
+    mass_kg: Mapped[Optional[float]] = mapped_camcops_column(
         permitted_value_checker=PermittedValueChecker(minimum=0),
         comment="mass (kg)",
     )
-    waist_cm = CamcopsColumn(
-        "waist_cm",
-        Float,
+    waist_cm: Mapped[Optional[float]] = mapped_camcops_column(
         permitted_value_checker=PermittedValueChecker(minimum=0),
         comment="waist circumference (cm)",
     )
-    comment = Column("comment", UnicodeText, comment="Clinician's comment")
+    comment: Mapped[Optional[str]] = mapped_column(
+        UnicodeText, comment="Clinician's comment"
+    )
 
     @staticmethod
     def longname(req: "CamcopsRequest") -> str:
@@ -197,7 +191,11 @@ class Bmi(TaskHasPatientMixin, Task):
     def bmi(self) -> Optional[float]:
         if not self.is_complete():
             return None
-        return self.mass_kg / (self.height_m * self.height_m)
+        try:
+            return self.mass_kg / (self.height_m * self.height_m)
+        except ZeroDivisionError:
+            # The client can set height to 0
+            return None
 
     def category(self, req: CamcopsRequest) -> str:
         bmi = self.bmi()
@@ -327,7 +325,7 @@ class Bmi(TaskHasPatientMixin, Task):
         expressions = []  # type: List[SnomedExpression]
         procedure_bmi = req.snomed(SnomedLookup.BMI_PROCEDURE_MEASUREMENT)
         unit = req.snomed(SnomedLookup.UNIT_OF_MEASURE)
-        if self.is_complete():
+        if self.is_complete() and self.bmi() is not None:
             kg = req.snomed(SnomedLookup.KILOGRAM)
             m = req.snomed(SnomedLookup.METRE)
             kg_per_sq_m = req.snomed(SnomedLookup.KG_PER_SQ_M)

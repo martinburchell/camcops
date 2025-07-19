@@ -40,6 +40,14 @@ CamCOPS
 ..  literalinclude:: licence_camcops.txt
     :language: none
 
+A few files have the alternative of the GNU Lesser General Public License
+(LGPL), documented in individual source code files (and see also files named
+README_licenses.txt). These can easily be found within the CamCOPS source code
+through the command:
+
+.. code-block:: bash
+
+    find . -type f -exec egrep -l "(OPTIONAL LGPL)|(BSD LICENSE)" {} \;
 
 .. _licences_other:
 .. _licences_qt:
@@ -57,7 +65,7 @@ Qt is used here under the LGPL. See:
   - note that some parts of Qt are only available under the GPL for open-source
     users: https://www.qt.io/licensing-comparison/
 
-- https://doc.qt.io/qt-5/licenses-used-in-qt.html
+- https://doc.qt.io/qt-6.5/licenses-used-in-qt.html
 
 - https://www.gnu.org/licenses/lgpl-3.0.en.html
 
@@ -322,6 +330,9 @@ the CamCOPS general images:
       - Modified from
         https://commons.wikimedia.org/wiki/File:Magnifying_glass_icon.svg (by
         Derferman; public domain).
+    * - neurodiversity.png
+      - From https://commons.wikimedia.org/wiki/File:Neurodiversity_Symbol.svg
+        (by Mrmw; public domain).
     * - next.png
       - |denovo|
     * - ok.png

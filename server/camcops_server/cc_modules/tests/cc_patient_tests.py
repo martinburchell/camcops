@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/tests/cc_patient_tests.py
 
@@ -27,9 +25,12 @@ camcops_server/cc_modules/tests/cc_patient_tests.py
 
 """
 
+from cardinal_pythonlib.datetimefunc import format_datetime
 import hl7
 import pendulum
 
+from camcops_server.cc_modules.cc_constants import DateFormat, ERA_NOW
+from camcops_server.cc_modules.cc_group import Group
 from camcops_server.cc_modules.cc_simpleobjects import BarePatientInfo
 from camcops_server.cc_modules.cc_patient import Patient
 from camcops_server.cc_modules.cc_patientidnum import PatientIdNum
@@ -40,9 +41,22 @@ from camcops_server.cc_modules.cc_taskschedule import (
     TaskScheduleItem,
 )
 from camcops_server.cc_modules.cc_spreadsheet import SpreadsheetPage
+from camcops_server.cc_modules.cc_testfactories import (
+    DeviceFactory,
+    GroupFactory,
+    NHSPatientIdNumFactory,
+    PatientFactory,
+    PatientTaskScheduleFactory,
+    RioPatientIdNumFactory,
+    ServerCreatedPatientFactory,
+    TaskScheduleFactory,
+    TaskScheduleItemFactory,
+    UserFactory,
+    UserGroupMembershipFactory,
+)
 from camcops_server.cc_modules.cc_unittest import (
     BasicDatabaseTestCase,
-    DemoDatabaseTestCase,
+    DemoRequestTestCase,
 )
 from camcops_server.cc_modules.cc_xml import XmlElement
 
@@ -52,26 +66,30 @@ from camcops_server.cc_modules.cc_xml import XmlElement
 # =============================================================================
 
 
-class PatientTests(DemoDatabaseTestCase):
-    """
-    Unit tests.
-    """
-
+class PatientTests(DemoRequestTestCase):
     def test_patient(self) -> None:
-        self.announce("test_patient")
-        from camcops_server.cc_modules.cc_group import Group
-
         req = self.req
-        q = self.dbsession.query(Patient)
-        p = q.first()  # type: Patient
-        assert p, "Missing Patient in demo database!"
+        req._debugging_user = UserFactory()
 
-        for pidnum in p.get_idnum_objects():
+        p = PatientFactory()
+        nhs_idnum = NHSPatientIdNumFactory(patient=p)
+        RioPatientIdNumFactory(patient=p)
+
+        idnum_objects = p.get_idnum_objects()
+        self.assertEqual(len(idnum_objects), 2)
+        for pidnum in idnum_objects:
             self.assertIsInstance(pidnum, PatientIdNum)
-        for idref in p.get_idnum_references():
+
+        idnum_references = p.get_idnum_references()
+        self.assertEqual(len(idnum_references), 2)
+        for idref in idnum_references:
             self.assertIsInstance(idref, IdNumReference)
-        for idnum in p.get_idnum_raw_values_only():
+
+        idnum_raw_values = p.get_idnum_raw_values_only()
+        self.assertEqual(len(idnum_raw_values), 2)
+        for idnum in idnum_raw_values:
             self.assertIsInstance(idnum, int)
+
         self.assertIsInstance(p.get_xml_root(req), XmlElement)
         self.assertIsInstance(p.get_spreadsheet_page(req), SpreadsheetPage)
         self.assertIsInstance(p.get_bare_ptinfo(), BarePatientInfo)
@@ -101,104 +119,82 @@ class PatientTests(DemoDatabaseTestCase):
             p.get_hl7_pid_segment(req, self.recipdef), hl7.Segment
         )
         self.assertIsInstanceOrNone(
-            p.get_idnum_object(which_idnum=1), PatientIdNum
+            p.get_idnum_object(which_idnum=nhs_idnum.which_idnum), PatientIdNum
         )
-        self.assertIsInstanceOrNone(p.get_idnum_value(which_idnum=1), int)
-        self.assertIsInstance(p.get_iddesc(req, which_idnum=1), str)
-        self.assertIsInstance(p.get_idshortdesc(req, which_idnum=1), str)
+        self.assertIsInstanceOrNone(
+            p.get_idnum_value(which_idnum=nhs_idnum.which_idnum), int
+        )
+        self.assertIsInstance(
+            p.get_iddesc(req, which_idnum=nhs_idnum.which_idnum), str
+        )
+        self.assertIsInstance(
+            p.get_idshortdesc(req, which_idnum=nhs_idnum.which_idnum), str
+        )
         self.assertIsInstance(p.is_preserved(), bool)
         self.assertIsInstance(p.is_finalized(), bool)
         self.assertIsInstance(p.user_may_edit(req), bool)
 
     def test_surname_forename_upper(self) -> None:
-        patient = Patient()
-        patient.forename = "Forename"
-        patient.surname = "Surname"
-
+        patient = PatientFactory(forename="Forename", surname="Surname")
         self.assertEqual(
             patient.get_surname_forename_upper(), "SURNAME, FORENAME"
         )
 
     def test_surname_forename_upper_no_forename(self) -> None:
-        patient = Patient()
-        patient.surname = "Surname"
-
+        patient = PatientFactory(forename=None, surname="Surname")
         self.assertEqual(
             patient.get_surname_forename_upper(), "SURNAME, (UNKNOWN)"
         )
 
     def test_surname_forename_upper_no_surname(self) -> None:
-        patient = Patient()
-        patient.forename = "Forename"
-
+        patient = PatientFactory(forename="Forename", surname=None)
         self.assertEqual(
             patient.get_surname_forename_upper(), "(UNKNOWN), FORENAME"
         )
 
 
-class LineageTests(DemoDatabaseTestCase):
-    def create_tasks(self) -> None:
-        # Actually not creating any tasks but we don't want the patients
-        # created by default in the baseclass
+class LineageTests(DemoRequestTestCase):
+    def setUp(self) -> None:
+        super().setUp()
 
-        # First record for patient 1
-        self.set_era("2020-01-01")
+        self.patient = PatientFactory()
+        self.current_patient_idnum = NHSPatientIdNumFactory(
+            patient=self.patient
+        )
+        self.assertTrue(self.current_patient_idnum._current)
 
-        self.patient_1 = Patient()
-        self.patient_1.id = 1
-        self.apply_standard_db_fields(self.patient_1)
-        self.dbsession.add(self.patient_1)
-
-        # First ID number record for patient 1
-        self.patient_idnum_1_1 = PatientIdNum()
-        self.patient_idnum_1_1.id = 3
-        self.apply_standard_db_fields(self.patient_idnum_1_1)
-        self.patient_idnum_1_1.patient_id = 1
-        self.patient_idnum_1_1.which_idnum = self.nhs_iddef.which_idnum
-        self.patient_idnum_1_1.idnum_value = 555
-        self.dbsession.add(self.patient_idnum_1_1)
-
-        # Second ID number record for patient 1
-        self.patient_idnum_1_2 = PatientIdNum()
-        self.patient_idnum_1_2.id = 3
-        self.apply_standard_db_fields(self.patient_idnum_1_2)
-        # This one is not current
-        self.patient_idnum_1_2._current = False
-        self.patient_idnum_1_2.patient_id = 1
-        self.patient_idnum_1_2.which_idnum = self.nhs_iddef.which_idnum
-        self.patient_idnum_1_2.idnum_value = 555
-        self.dbsession.add(self.patient_idnum_1_2)
-
-        self.dbsession.commit()
+        self.not_current_patient_idnum = NHSPatientIdNumFactory(
+            patient=self.patient,
+            _current=False,
+            id=self.current_patient_idnum.id,
+            which_idnum=self.current_patient_idnum.which_idnum,
+            idnum_value=self.current_patient_idnum.idnum_value,
+        )
+        self.assertFalse(self.not_current_patient_idnum._current)
 
     def test_gen_patient_idnums_even_noncurrent(self) -> None:
-        idnums = list(self.patient_1.gen_patient_idnums_even_noncurrent())
+        idnums = list(self.patient.gen_patient_idnums_even_noncurrent())
 
         self.assertEqual(len(idnums), 2)
 
 
-class PatientDeleteTests(DemoDatabaseTestCase):
+class PatientDeleteTests(DemoRequestTestCase):
     def test_deletes_patient_task_schedule(self) -> None:
-        schedule = TaskSchedule()
-        schedule.group_id = self.group.id
-        self.dbsession.add(schedule)
-        self.dbsession.flush()
+        schedule = TaskScheduleFactory()
 
-        item = TaskScheduleItem()
-        item.schedule_id = schedule.id
-        item.task_table_name = "ace3"
-        item.due_from = pendulum.Duration(days=30)
-        item.due_by = pendulum.Duration(days=60)
-        self.dbsession.add(item)
-        self.dbsession.flush()
+        item = TaskScheduleItemFactory(
+            task_schedule=schedule,
+            task_table_name="ace3",
+            due_from=pendulum.Duration(days=30),
+            due_by=pendulum.Duration(days=60),
+        )
 
-        patient = self.create_patient()
+        patient = ServerCreatedPatientFactory()
 
-        pts = PatientTaskSchedule()
-        pts.schedule_id = schedule.id
-        pts.patient_pk = patient.pk
-        self.dbsession.add(pts)
-        self.dbsession.commit()
+        pts = PatientTaskScheduleFactory(
+            task_schedule=schedule,
+            patient=patient,
+        )
 
         self.assertIsNotNone(
             self.dbsession.query(TaskSchedule)
@@ -238,60 +234,258 @@ class PatientDeleteTests(DemoDatabaseTestCase):
 
 
 class PatientPermissionTests(BasicDatabaseTestCase):
-    def test_group_administrator_may_edit_server_created(self) -> None:
-        user = self.create_user(username="testuser")
-        self.dbsession.flush()
+    def setUp(self) -> None:
+        super().setUp()
 
-        patient = self.create_patient(
-            _group=self.group, as_server_patient=True
+        self.user = UserFactory()
+        self.group = GroupFactory()
+
+    def test_group_administrator_may_edit_server_patient(self) -> None:
+        patient = ServerCreatedPatientFactory(_group=self.group)
+        ugm = UserGroupMembershipFactory(
+            user_id=self.user.id, group_id=self.group.id, groupadmin=True
         )
 
-        self.create_membership(user, self.group, groupadmin=True)
-        self.dbsession.commit()
-
-        self.req._debugging_user = user
+        self.req._debugging_user = ugm.user
         self.assertTrue(patient.user_may_edit(self.req))
 
-    def test_group_administrator_may_edit_finalized(self) -> None:
-        user = self.create_user(username="testuser")
-        self.dbsession.flush()
-
-        patient = self.create_patient(
-            _group=self.group, as_server_patient=False
+    def test_group_administrator_may_edit_finalized_patient(self) -> None:
+        patient = PatientFactory(_group=self.group)
+        ugm = UserGroupMembershipFactory(
+            user_id=self.user.id, group_id=self.group.id, groupadmin=True
         )
 
-        self.create_membership(user, self.group, groupadmin=True)
-        self.dbsession.commit()
+        self.assertTrue(ugm.groupadmin)
 
-        self.req._debugging_user = user
+        self.req._debugging_user = ugm.user
         self.assertTrue(patient.user_may_edit(self.req))
 
     def test_group_member_with_permission_may_edit_server_created(
         self,
     ) -> None:
-        user = self.create_user(username="testuser")
-        self.dbsession.flush()
-
-        patient = self.create_patient(
-            _group=self.group, as_server_patient=True
+        patient = ServerCreatedPatientFactory(_group=self.group)
+        ugm = UserGroupMembershipFactory(
+            user_id=self.user.id,
+            group_id=self.group.id,
+            may_manage_patients=True,
         )
 
-        self.create_membership(user, self.group, may_manage_patients=True)
-        self.dbsession.commit()
-
-        self.req._debugging_user = user
+        self.req._debugging_user = ugm.user
         self.assertTrue(patient.user_may_edit(self.req))
 
     def test_group_member_with_permission_may_not_edit_finalized(self) -> None:
-        user = self.create_user(username="testuser")
-        self.dbsession.flush()
-
-        patient = self.create_patient(
-            _group=self.group, as_server_patient=False
+        patient = PatientFactory(_group=self.group)
+        ugm = UserGroupMembershipFactory(
+            user_id=self.user.id,
+            group_id=self.group.id,
+            may_manage_patients=True,
         )
 
-        self.create_membership(user, self.group, may_manage_patients=True)
-        self.dbsession.commit()
-
-        self.req._debugging_user = user
+        self.req._debugging_user = ugm.user
         self.assertFalse(patient.user_may_edit(self.req))
+
+
+class EquivalenceTests(DemoRequestTestCase):
+    """
+    Tests for the __eq__ method on Patient.
+    """
+
+    def test_same_object_true(self) -> None:
+        patient = PatientFactory()
+
+        self.assertEqual(patient, patient)
+
+    def test_same_id_device_era_true(self) -> None:
+        patient_1 = PatientFactory()
+        patient_2 = PatientFactory(
+            id=patient_1.id, _device=patient_1._device, _era=patient_1._era
+        )
+
+        self.assertEqual(patient_1, patient_2)
+
+    def test_same_idnum_true(self) -> None:
+        patient_1 = PatientFactory()
+        patient_2 = PatientFactory()
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+        )
+
+        self.assertEqual(patient_1, patient_2)
+
+    def test_different_idnum_false(self) -> None:
+        patient_1 = PatientFactory()
+        patient_2 = PatientFactory()
+
+        NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(patient=patient_2)
+
+        self.assertNotEqual(patient_1, patient_2)
+
+    def test_not_a_patient_false(self) -> None:
+        patient = PatientFactory()
+        self.assertNotEqual(patient, "not a patient")
+
+
+class DuplicatesTests(BasicDatabaseTestCase):
+    """
+    Tests for the duplicates property on Patient.
+    """
+
+    def test_matching_patient_in_duplicates(self) -> None:
+        patient_1 = PatientFactory(_group=self.group)
+        patient_2 = PatientFactory(
+            _group=self.group, _device=patient_1._device
+        )
+
+        # Matching
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+        )
+
+        # Not matching
+        RioPatientIdNumFactory(patient=patient_1)
+        RioPatientIdNumFactory(patient=patient_2)
+
+        self.assert_in_duplicates(patient_1, patient_2.duplicates)
+        self.assert_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_duplicates_include_duplicate_idnum_on_single_patient(
+        self,
+    ) -> None:
+        # The web interface doesn't actually allow this.
+        patient = PatientFactory(_group=self.group)
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient)
+        NHSPatientIdNumFactory(
+            patient=patient,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+        )
+
+        self.assert_in_duplicates(patient, patient.duplicates)
+
+    def test_self_not_in_duplicates(self) -> None:
+        patient = PatientFactory(_group=self.group)
+        NHSPatientIdNumFactory(patient=patient)
+
+        self.assert_not_in_duplicates(patient, patient.duplicates)
+
+    def test_different_group_not_in_duplicates(self) -> None:
+        group_1 = GroupFactory()
+        group_2 = GroupFactory()
+
+        patient_1 = PatientFactory(_group=group_1)
+        patient_2 = PatientFactory(_group=group_2, _device=patient_1._device)
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_different_type_same_value_not_in_duplicates(self) -> None:
+        patient_1 = PatientFactory(_group=self.group)
+        patient_2 = PatientFactory(
+            _group=self.group, _device=patient_1._device
+        )
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        RioPatientIdNumFactory(
+            patient=patient_2, idnum_value=idnum_1.idnum_value
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_different_value_not_in_duplicates(self) -> None:
+        patient_1 = PatientFactory(_group=self.group)
+        patient_2 = PatientFactory(
+            _group=self.group, _device=patient_1._device
+        )
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_different_device_not_in_duplicates(self) -> None:
+        device_1 = DeviceFactory()
+        device_2 = DeviceFactory()
+
+        patient_1 = PatientFactory(_device=device_1, _group=self.group)
+        patient_2 = PatientFactory(_group=self.group, _device=device_2)
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_different_era_not_in_duplicates(self) -> None:
+        patient_1_era = ERA_NOW
+        era_time = pendulum.parse("1970-01-01T12:00")
+        patient_2_era = format_datetime(era_time, DateFormat.ISO8601)  # type: ignore[arg-type]  # noqa: E501
+
+        patient_1 = PatientFactory(_group=self.group, _era=patient_1_era)
+        patient_2 = PatientFactory(
+            _group=self.group, _device=patient_1._device, _era=patient_2_era
+        )
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1, _era=patient_1_era)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+            _era=patient_2_era,
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def test_not_current_not_in_duplicates(self) -> None:
+        patient_1 = PatientFactory(_group=self.group)
+        patient_2 = PatientFactory(
+            _group=self.group, _device=patient_1._device
+        )
+
+        idnum_1 = NHSPatientIdNumFactory(patient=patient_1, _current=True)
+        NHSPatientIdNumFactory(
+            patient=patient_2,
+            which_idnum=idnum_1.which_idnum,
+            idnum_value=idnum_1.idnum_value,
+            _current=False,
+        )
+
+        self.assert_not_in_duplicates(patient_2, patient_1.duplicates)
+
+    def assert_in_duplicates(
+        self, patient: Patient, duplicates: set[Patient]
+    ) -> None:
+        # A straightforward assertIn() check on Patient objects isn't enough
+        # here because we override __eq__ on Patient to be more lenient.
+
+        pks = [p._pk for p in duplicates]
+        self.assertIn(patient._pk, pks)
+
+    def assert_not_in_duplicates(
+        self, patient: Patient, duplicates: set[Patient]
+    ) -> None:
+        # A straightforward assertNotIn() check on Patient objects isn't enough
+        # here because we override __eq__ on Patient to be more lenient.
+
+        pks = [p._pk for p in duplicates]
+        self.assertNotIn(patient._pk, pks)

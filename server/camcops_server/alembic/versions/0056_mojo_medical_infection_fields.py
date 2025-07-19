@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0056_mojo_medical_infection_fields.py
 
@@ -50,7 +48,7 @@ depends_on = None
 # =============================================================================
 
 
-def upgrade():
+def upgrade() -> None:
     # We considered changing the wording of the questions about having had an
     # infection in the past month / two months preceding last month but decided
     # against it so that old data is comparable with new data. So this
@@ -58,5 +56,5 @@ def upgrade():
     pass
 
 
-def downgrade():
+def downgrade() -> None:
     pass

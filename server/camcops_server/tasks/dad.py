@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/dad.py
 
@@ -29,7 +27,6 @@ camcops_server/tasks/dad.py
 
 from typing import Any, Dict, Iterable, List, Tuple, Type
 
-from sqlalchemy.ext.declarative import DeclarativeMeta
 from sqlalchemy.sql.sqltypes import Integer
 
 from camcops_server.cc_modules.cc_constants import (
@@ -43,7 +40,7 @@ from camcops_server.cc_modules.cc_html import (
 )
 from camcops_server.cc_modules.cc_request import CamcopsRequest
 from camcops_server.cc_modules.cc_sqla_coltypes import (
-    CamcopsColumn,
+    camcops_column,
     PermittedValueChecker,
 )
 from camcops_server.cc_modules.cc_summaryelement import SummaryElement
@@ -65,35 +62,11 @@ YN_NA_CHECKER = PermittedValueChecker(permitted_values=[YES, NO, NA])
 # =============================================================================
 
 
-class DadMetaclass(DeclarativeMeta):
-    # noinspection PyInitNewSignature
-    def __init__(
-        cls: Type["Dad"],
-        name: str,
-        bases: Tuple[Type, ...],
-        classdict: Dict[str, Any],
-    ) -> None:
-        explan = f" ({YES} yes, {NO} no, {NA} not applicable)"
-        for colname in cls.ITEMS:
-            setattr(
-                cls,
-                colname,
-                CamcopsColumn(
-                    colname,
-                    Integer,
-                    permitted_value_checker=YN_NA_CHECKER,
-                    comment=colname + explan,
-                ),
-            )
-        super().__init__(name, bases, classdict)
-
-
-class Dad(
+class Dad(  # type: ignore[misc]
     TaskHasPatientMixin,
     TaskHasRespondentMixin,
     TaskHasClinicianMixin,
     Task,
-    metaclass=DadMetaclass,
 ):
     """
     Server implementation of the DAD task.
@@ -156,6 +129,21 @@ class Dad(
         "leisure_exec_complete_chores",
         "leisure_exec_safe_at_home",
     ]
+
+    @classmethod
+    def extend_columns(cls: Type["Dad"], **kwargs: Any) -> None:
+        explan = f" ({YES} yes, {NO} no, {NA} not applicable)"
+        for colname in cls.ITEMS:
+            setattr(
+                cls,
+                colname,
+                camcops_column(
+                    colname,
+                    Integer,
+                    permitted_value_checker=YN_NA_CHECKER,
+                    comment=colname + explan,
+                ),
+            )
 
     @staticmethod
     def longname(req: "CamcopsRequest") -> str:

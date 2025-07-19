@@ -18,20 +18,25 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include "hboxlayouthfw.h"
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
 
+#include "hboxlayouthfw.h"
 
 HBoxLayoutHfw::HBoxLayoutHfw(QWidget* parent) :
     BoxLayoutHfw(LeftToRight, parent)
 {
 }
 
-
 HBoxLayoutHfw::HBoxLayoutHfw() :
     BoxLayoutHfw(LeftToRight)
 {
 }
-
 
 HBoxLayoutHfw::~HBoxLayoutHfw()
 {

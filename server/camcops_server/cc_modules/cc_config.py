@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # noinspection HttpUrlsUsage
 """
 camcops_server/cc_modules/cc_config.py
@@ -189,7 +187,7 @@ DEFAULT_LINUX_CAMCOPS_EXECUTABLE = os.path.join(
 DEFAULT_LINUX_CAMCOPS_STATIC_DIR = os.path.join(
     DEFAULT_LINUX_CAMCOPS_VENV_DIR,
     "lib",
-    "python3.8",
+    "python3.9",
     "site-packages",
     "camcops_server",
     "static",
@@ -1392,10 +1390,10 @@ class CamcopsConfig(object):
                     f"Duplicate restricted task specification "
                     f"for {xml_taskname!r}"
                 )
-            groupnames = [x.strip() for x in groupnames.split(",")]
-            for gn in groupnames:
+            groupnames_list = [x.strip() for x in groupnames.split(",")]
+            for gn in groupnames_list:
                 validate_group_name(gn)
-            self.restricted_tasks[xml_taskname] = groupnames
+            self.restricted_tasks[xml_taskname] = groupnames_list
 
         self.session_timeout_minutes = _get_int(
             s, cs.SESSION_TIMEOUT_MINUTES, cd.SESSION_TIMEOUT_MINUTES
@@ -1635,7 +1633,7 @@ class CamcopsConfig(object):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Other attributes
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        self._sqla_engine = None
+        self._sqla_engine: Optional[Engine] = None
 
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         # Docker checks
@@ -1920,7 +1918,6 @@ class CamcopsConfig(object):
         Args:
             parser: optional :class:`configparser.ConfigParser` object.
         """
-        self._export_recipients = []  # type: List[ExportRecipientInfo]
         for recip_name in self.export_recipient_names:
             log.debug("Loading export config for recipient {!r}", recip_name)
             try:
@@ -1940,7 +1937,7 @@ class CamcopsConfig(object):
         Returns:
             list: of
             :class:`camcops_server.cc_modules.cc_exportrecipientinfo.ExportRecipientInfo`
-        """  # noqa
+        """
         return self._export_recipients
 
     # -------------------------------------------------------------------------

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # noinspection HttpUrlsUsage
 """
 camcops_server/cc_modules/cc_fhir.py
@@ -139,7 +137,7 @@ This problem occurs intermittently:
   So we use a carefully sequenced file lock; see
   :func:`camcops_server.cc_modules.cc_export.export_task`.
 
-"""  # noqa
+"""
 
 
 # =============================================================================
@@ -201,7 +199,7 @@ if any([DEBUG_FHIR_TX]):
 # Development thoughts
 # =============================================================================
 
-_ = """
+_ = r"""
 
 Dive into the internals of the HAPI FHIR server
 ===============================================
@@ -320,7 +318,7 @@ Each class has entries like this:
 The fields are: ``name, jsname, typ, is_list, of_many, not_optional``.
 They are validated in FHIRAbstractBase.update_with_json().
 
-"""  # noqa
+"""  # noqa: E501
 
 
 # =============================================================================
@@ -784,7 +782,7 @@ class FHIRAnsweredQuestion:
                         }
                     ).as_json()
                 )
-            qitem_dict[Fc.ANSWER_OPTION] = options
+            qitem_dict[Fc.ANSWER_OPTION] = options  # type: ignore[assignment]
 
         return QuestionnaireItem(jsondict=qitem_dict).as_json()
 
@@ -814,9 +812,9 @@ class FHIRAnsweredQuestion:
         elif answer_type == FHIRAnswerType.DATETIME:
             fhir_answer = FHIRDate(raw_answer.isoformat()).as_json()
         elif answer_type == FHIRAnswerType.DECIMAL:
-            fhir_answer = float(raw_answer)
+            fhir_answer = float(raw_answer)  # type: ignore[assignment]
         elif answer_type == FHIRAnswerType.INTEGER:
-            fhir_answer = int(raw_answer)
+            fhir_answer = int(raw_answer)  # type: ignore[assignment]
         elif answer_type == FHIRAnswerType.QUANTITY:
             fhir_answer = Quantity(
                 jsondict={
@@ -825,13 +823,13 @@ class FHIRAnsweredQuestion:
                 }
             ).as_json()
         elif answer_type == FHIRAnswerType.STRING:
-            fhir_answer = str(raw_answer)
+            fhir_answer = str(raw_answer)  # type: ignore[assignment]
         elif answer_type == FHIRAnswerType.TIME:
             fhir_answer = FHIRDate(
                 format_datetime(raw_answer, DateFormat.FHIR_TIME)
             ).as_json()
         elif answer_type == FHIRAnswerType.URI:
-            fhir_answer = str(raw_answer)
+            fhir_answer = str(raw_answer)  # type: ignore[assignment]
         else:
             raise NotImplementedError(
                 f"Don't know how to handle FHIR answer type {answer_type}"

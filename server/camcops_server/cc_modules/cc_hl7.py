@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # noinspection HttpUrlsUsage
 """
 camcops_server/cc_modules/cc_hl7.py
@@ -66,7 +64,8 @@ We can then add an option for structure (XML), HTML, PDF export.
 import base64
 import logging
 import socket
-from typing import List, Optional, Tuple, TYPE_CHECKING, Union
+from types import TracebackType
+from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 from cardinal_pythonlib.datetimefunc import format_datetime
 from cardinal_pythonlib.logs import BraceStyleAdapter
@@ -180,7 +179,7 @@ def make_msh_segment(
         COMPONENT_SEPARATOR,
         [
             "ORU",  # message type ID = Observ result/unsolicited
-            "R01"  # trigger event ID = ORU/ACK - Unsolicited transmission
+            "R01",  # trigger event ID = ORU/ACK - Unsolicited transmission
             # of an observation message
         ],
     )
@@ -646,7 +645,7 @@ def make_dg1_segment(
     segment_id = "DG1"
     try:
         int(set_id)
-        set_id = str(set_id)
+        set_id = str(set_id)  # type: ignore[assignment]
     except Exception:
         raise AssertionError("make_dg1_segment: set_id invalid")
     diagnosis_coding_method = ""
@@ -881,20 +880,27 @@ class MLLPTimeoutClient(object):
         self.socket.connect((host, port))
         self.encoding = "utf-8"
 
-    def __enter__(self):
+    def __enter__(self) -> "MLLPTimeoutClient":
         """
         For use with "with" statement.
         """
         return self
 
     # noinspection PyUnusedLocal
-    def __exit__(self, exc_type, exc_val, traceback):
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        traceback: Optional[TracebackType],
+    ) -> Optional[bool]:
         """
         For use with "with" statement.
         """
         self.close()
 
-    def close(self):
+        return None
+
+    def close(self) -> None:
         """
         Release the socket connection.
         """

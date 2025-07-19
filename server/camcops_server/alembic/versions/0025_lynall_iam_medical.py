@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0025_lynall_iam_medical.py
 
@@ -62,8 +60,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         "lynall_1_iam_medical",
         sa.Column(
@@ -633,5 +632,5 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_table("lynall_1_iam_medical")

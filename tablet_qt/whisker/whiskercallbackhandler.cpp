@@ -19,55 +19,68 @@
 */
 
 #include "whiskercallbackhandler.h"
-#include "whisker/whiskerinboundmessage.h"
 
+#include "whisker/whiskerinboundmessage.h"
 
 WhiskerCallbackHandler::WhiskerCallbackHandler()
 {
 }
 
-
 void WhiskerCallbackHandler::add(
-        const QString& event,
-        const WhiskerCallbackDefinition::CallbackFunction& callback,
-        const QString& name,
-        WhiskerCallbackDefinition::ExpiryType how_expires,
-        int target_n_calls,
-        qint64 lifetime_ms,
-        bool swallow_event)
+    const QString& event,
+    const WhiskerCallbackDefinition::CallbackFunction& callback,
+    const QString& name,
+    WhiskerCallbackDefinition::ExpiryType how_expires,
+    int target_n_calls,
+    qint64 lifetime_ms,
+    bool swallow_event
+)
 {
-    WhiskerCallbackDefinition cb(event, callback, name,
-                                 how_expires, target_n_calls, lifetime_ms,
-                                 swallow_event);
+    WhiskerCallbackDefinition cb(
+        event,
+        callback,
+        name,
+        how_expires,
+        target_n_calls,
+        lifetime_ms,
+        swallow_event
+    );
     m_callbacks.append(cb);
 }
 
-
 void WhiskerCallbackHandler::addSingle(
-        const QString& event,
-        const WhiskerCallbackDefinition::CallbackFunction& callback,
-        const QString& name,
-        bool swallow_event)
+    const QString& event,
+    const WhiskerCallbackDefinition::CallbackFunction& callback,
+    const QString& name,
+    bool swallow_event
+)
 {
     // Adds a single-shot callback.
-    add(event, callback, name,
-        WhiskerCallbackDefinition::ExpiryType::Count, 1, 0,
+    add(event,
+        callback,
+        name,
+        WhiskerCallbackDefinition::ExpiryType::Count,
+        1,
+        0,
         swallow_event);
 }
-
 
 void WhiskerCallbackHandler::addPersistent(
-        const QString& event,
-        const WhiskerCallbackDefinition::CallbackFunction& callback,
-        const QString& name,
-        bool swallow_event)
+    const QString& event,
+    const WhiskerCallbackDefinition::CallbackFunction& callback,
+    const QString& name,
+    bool swallow_event
+)
 {
     // Adds a persistent callback.
-    add(event, callback, name,
-        WhiskerCallbackDefinition::ExpiryType::Infinite, 0, 0,
+    add(event,
+        callback,
+        name,
+        WhiskerCallbackDefinition::ExpiryType::Infinite,
+        0,
+        0,
         swallow_event);
 }
-
 
 void WhiskerCallbackHandler::removeByEvent(const QString& event)
 {
@@ -82,7 +95,6 @@ void WhiskerCallbackHandler::removeByEvent(const QString& event)
     }
 }
 
-
 void WhiskerCallbackHandler::removeByName(const QString& name)
 {
     if (name.isEmpty()) {
@@ -96,9 +108,9 @@ void WhiskerCallbackHandler::removeByName(const QString& name)
     }
 }
 
-
-void WhiskerCallbackHandler::removeByEventAndName(const QString& event,
-                                                  const QString& name)
+void WhiskerCallbackHandler::removeByEventAndName(
+    const QString& event, const QString& name
+)
 {
     if (event.isEmpty() || name.isEmpty()) {
         return;
@@ -112,13 +124,11 @@ void WhiskerCallbackHandler::removeByEventAndName(const QString& event,
     }
 }
 
-
 void WhiskerCallbackHandler::clearCallbacks()
 {
     // Removes all callbacks.
     m_callbacks.clear();
 }
-
 
 bool WhiskerCallbackHandler::processEvent(const WhiskerInboundMessage& msg)
 {
@@ -140,11 +150,10 @@ bool WhiskerCallbackHandler::processEvent(const WhiskerInboundMessage& msg)
     return false;
 }
 
-
 void WhiskerCallbackHandler::removeExpiredCallbacks(const QDateTime& now)
 {
     // Remove any single-shot (or otherwise expired) events.
-    // http://doc.qt.io/qt-5/containers.html#java-style-iterators
+    // https://doc.qt.io/qt-6.5/containers.html#java-style-iterators
     QMutableVectorIterator<WhiskerCallbackDefinition> it(m_callbacks);
     while (it.hasNext()) {
         if (it.next().hasExpired(now)) {

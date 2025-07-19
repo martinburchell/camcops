@@ -25,11 +25,11 @@
 #include <QPointer>
 #include <QSharedPointer>
 #include <QStringList>
+
 #include "common/aliases_camcops.h"
 
 class QWidget;
 class Questionnaire;
-
 
 class QuElement : public QObject
 {
@@ -132,10 +132,10 @@ protected:
     QPointer<QWidget> m_widget;  // used to cache a widget pointer
     QStringList m_tags;  // our tags
     bool m_visible;  // are we visible?
-    Qt::Alignment m_widget_alignment;  // intended alignment of widget in layout
+    Qt::Alignment m_widget_alignment;
+    // ... intended alignment of widget in layout
     Qt::InputMethodHints m_widget_input_method_hints;
 };
-
 
 /*
 ===============================================================================
@@ -146,7 +146,8 @@ Constructing element lists and pages
    going to be using polymorphic objects that inherit from Element, and we
    can't have a list of Elements (that may not be base class Elements)
    without using pointers.
-   Example: http://stackoverflow.com/questions/7223613/c-polymorphism-without-pointers
+   Example:
+   http://stackoverflow.com/questions/7223613/c-polymorphism-without-pointers
  - Moreover, we cannot create a plain object then take a pointer from
    its address, since we'd be constructing the objects on the stack (by a
    task's edit() function), and they'd be destroyed before we want to use
@@ -194,7 +195,7 @@ Constructing element lists and pages
        in definition of macro 'Q_DISABLE_COPY'
  - ... so do that by hand?
  - Still have similar problems relating to Q_DISABLE_COPY
-    http://doc.qt.io/qt-5/qobject.html#Q_DISABLE_COPY
+    https://doc.qt.io/qt-6.5/qobject.html#Q_DISABLE_COPY
     http://stackoverflow.com/questions/2855495/qobject-cloning
  - So can we make elements *not* inherit from QObject? We're only deriving
    so we can receive signals.
@@ -202,7 +203,7 @@ Constructing element lists and pages
         http://stackoverflow.com/questions/7502600/how-to-use-signal-and-slot-without-deriving-from-qobject
    or a lambda/more generic functor:
         http://stackoverflow.com/questions/26937517/qt-connect-without-qobject-or-slots
-        http://doc.qt.io/qt-5.7/qobject.html#connect-4
+        https://doc.qt.io/qt-6.5/qobject.html#connect-4
 
  - HOWEVER, ONCE YOU ADD SIGNALS TO NON-QOBJECT OBJECTS WITH std::bind,
    the process of copying BREAKS THE SIGNAL.

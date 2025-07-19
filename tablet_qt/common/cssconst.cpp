@@ -1,3 +1,23 @@
+/*
+    Copyright (C) 2012, University of Cambridge, Department of Psychiatry.
+    Created by Rudolf Cardinal (rnc1001@cam.ac.uk).
+
+    This file is part of CamCOPS.
+
+    CamCOPS is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    CamCOPS is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "cssconst.h"
 
 namespace cssconst {
@@ -18,7 +38,8 @@ const char* MCQ_GRID = "mcq_grid";
 const char* MCQ_GRID_SINGLE_BOOLEAN = "mcq_grid_single_boolean";
 const char* MCQ_INSTRUCTION = "mcq_instruction";
 const char* MENU_HEADER_CRIPPLED = "menu_header_crippled";
-const char* MENU_HEADER_MORE_OPTIONS = "menu_header_more_options";
+const char* MENU_HEADER_SINGLE_USER_BUTTONS
+    = "menu_header_single_user_buttons";
 const char* MENU_HEADER_NO_PATIENT = "menu_header_no_patient";
 const char* MENU_HEADER_PATIENT_INFO = "menu_header_patient_info";
 const char* MENU_ITEM_EDITABLE_TASK = "menu_item_editable_task";
@@ -37,9 +58,12 @@ const char* PROPERTY_ITALIC = "italic";
 const char* PROPERTY_MISSING = "missing";
 const char* PROPERTY_READ_ONLY = "readonly";
 const char* PROPERTY_STATE = "state";
-const char* QUESTIONNAIRE_BACKGROUND_CLINICIAN = "questionnaire_background_clinician";
-const char* QUESTIONNAIRE_BACKGROUND_CONFIG = "questionnaire_background_config";
-const char* QUESTIONNAIRE_BACKGROUND_PATIENT = "questionnaire_background_patient";
+const char* QUESTIONNAIRE_BACKGROUND_CLINICIAN
+    = "questionnaire_background_clinician";
+const char* QUESTIONNAIRE_BACKGROUND_CONFIG
+    = "questionnaire_background_config";
+const char* QUESTIONNAIRE_BACKGROUND_PATIENT
+    = "questionnaire_background_patient";
 const char* QUESTIONNAIRE_HORIZONTAL_LINE = "questionnaire_horizontal_line";
 const char* QUESTION = "question";
 const char* QUHEADING = "quheading";

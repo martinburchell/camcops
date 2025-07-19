@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_convert.py
 
@@ -60,7 +58,7 @@ REGEX_WHITESPACE = re.compile(r"\s")
 # =============================================================================
 
 
-def encode_single_value(v: Any, is_blob=False) -> str:
+def encode_single_value(v: Any, is_blob: bool = False) -> str:
     """
     Encodes a value for incorporation into an SQL CSV value string.
 

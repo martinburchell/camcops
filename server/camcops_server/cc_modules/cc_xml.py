@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_xml.py
 
@@ -45,13 +43,16 @@ from sqlalchemy.sql.schema import Column
 from sqlalchemy.sql.type_api import TypeEngine
 
 from camcops_server.cc_modules.cc_simpleobjects import XmlSimpleValue
-from camcops_server.cc_modules.cc_sqla_coltypes import gen_camcops_blob_columns
+from camcops_server.cc_modules.cc_sqla_coltypes import (
+    COLATTR_BLOB_RELATIONSHIP_ATTR_NAME,
+    gen_camcops_blob_columns,
+)
 
 if TYPE_CHECKING:
-    from camcops_server.cc_modules.cc_request import (  # noqa: F401
+    from camcops_server.cc_modules.cc_request import (
         CamcopsRequest,
     )
-    from camcops_server.cc_modules.cc_summaryelement import (  # noqa: F401
+    from camcops_server.cc_modules.cc_summaryelement import (
         SummaryElement,
     )
 
@@ -168,7 +169,7 @@ XML_COMMENT_STORED = XmlLiteral("<!-- Stored fields -->")
 # simple. Therefore, let's roll our own:
 
 
-def make_xml_branches_from_columns(
+def make_xml_branches_from_columns(  # type: ignore[no-untyped-def]
     obj, skip_fields: List[str] = None
 ) -> List[XmlElement]:
     """
@@ -233,7 +234,7 @@ def make_xml_branches_from_summaries(
     return branches
 
 
-def make_xml_branches_from_blobs(
+def make_xml_branches_from_blobs(  # type: ignore[no-untyped-def]
     req: "CamcopsRequest", obj, skip_fields: List[str] = None
 ) -> List[XmlElement]:
     """
@@ -255,7 +256,9 @@ def make_xml_branches_from_blobs(
         colname = column.name
         if colname in skip_fields:
             continue
-        relationship_attr = column.blob_relationship_attr_name
+        relationship_attr = column.info.get(
+            COLATTR_BLOB_RELATIONSHIP_ATTR_NAME, ""
+        )
         blob = getattr(obj, relationship_attr)
         branches.append(
             XmlElement(

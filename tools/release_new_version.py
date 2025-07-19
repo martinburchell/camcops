@@ -28,14 +28,15 @@ tools/release_new_version.py
 """
 
 import argparse
-from datetime import datetime
+import csv
+from datetime import date, datetime
 import logging
 import os
 from pathlib import Path
 import re
 from subprocess import CalledProcessError, PIPE, run
 import sys
-from typing import Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from cardinal_pythonlib.logs import main_only_quicksetup_rootlogger
 from rich_argparse import ArgumentDefaultsRichHelpFormatter
@@ -50,22 +51,32 @@ EXIT_FAILURE = 1
 
 ROOT_TOOLS_DIR = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.join(ROOT_TOOLS_DIR, "..")
+
+# Docs paths
 DOCS_DIR = os.path.join(PROJECT_ROOT, "docs")
 REBUILD_DOCS = os.path.join(DOCS_DIR, "rebuild_docs.py")
 DOCS_SOURCE_DIR = os.path.join(DOCS_DIR, "source")
+CHANGELOG = os.path.join(DOCS_SOURCE_DIR, "changelog.rst")
 APACHE_CONFIG_FILE = os.path.join(
     DOCS_SOURCE_DIR, "administrator", "_demo_apache_config.conf"
 )
-CPP_SOURCE_DIR = os.path.join(PROJECT_ROOT, "tablet_qt")
+PLAY_STORE_RELEASE_HISTORY_FILE = os.path.join(
+    DOCS_SOURCE_DIR, "developer", "play_store_release_history.csv"
+)
+
+# Server paths
 SERVER_SOURCE_DIR = os.path.join(PROJECT_ROOT, "server")
 SERVER_TOOLS_DIR = os.path.join(SERVER_SOURCE_DIR, "tools")
 SERVER_DIST_DIR = os.path.join(SERVER_SOURCE_DIR, "dist")
 SERVER_PACKAGE_DIR = os.path.join(SERVER_SOURCE_DIR, "packagebuild")
 MAKE_LINUX_PACKAGES = os.path.join(SERVER_TOOLS_DIR, "MAKE_LINUX_PACKAGES.py")
-CHANGELOG = os.path.join(DOCS_SOURCE_DIR, "changelog.rst")
 SERVER_VERSION_FILE = os.path.join(
     SERVER_SOURCE_DIR, "camcops_server", "cc_modules", "cc_version_string.py"
 )
+
+# Client paths
+CPP_SOURCE_DIR = os.path.join(PROJECT_ROOT, "tablet_qt")
+PROJECT_FILE = os.path.join(CPP_SOURCE_DIR, "camcops.pro")
 CLIENT_VERSION_FILE = os.path.join(
     CPP_SOURCE_DIR, "version", "camcopsversion.cpp"
 )
@@ -88,7 +99,7 @@ def in_virtualenv() -> bool:
     )
 
 
-def valid_date(date_string: str) -> datetime.date:
+def valid_date(date_string: str) -> date:
     """
     Converts a string like "2020-12-31" to a date, or raises.
     """
@@ -98,6 +109,10 @@ def valid_date(date_string: str) -> datetime.date:
     except ValueError:
         message = f"Not a valid date: '{date_string}'"
         raise argparse.ArgumentTypeError(message)
+
+
+class MissingCodeException(Exception):
+    pass
 
 
 class MissingVersionException(Exception):
@@ -133,6 +148,21 @@ class VersionReleaser:
     )
     android_version_replace = r"\g<1>{major}\g<3>{minor}\g<5>{patch}\g<7>"
 
+    android_version_codes_table_search = (
+        # ( 1 ) (      2       ); ( 3 ) (      4      ))
+        r"(\d+) (\(32-bit ARM\)); (\d+) (\(64-bit ARM\))"
+    )
+
+    android_32_bit_version_code_search = (
+        r'(CAMCOPS_32_BIT_VERSION_CODE) = "(\d+)"'
+    )
+    android_32_bit_version_code_replace = r'\g<1> = "{code_32_bit}"'
+
+    android_64_bit_version_code_search = (
+        r'(CAMCOPS_64_BIT_VERSION_CODE) = "(\d+)"'
+    )
+    android_64_bit_version_code_replace = r'\g<1> = "{code_64_bit}"'
+
     ios_short_version_search = (
         # (                      1                         )( 3 )( 3)( 4 )( 5)( 6 )(    7    )  # noqa: E501
         r"(<key>CFBundleShortVersionString</key>\s+<string>)(\d+)(\.)(\d+)(\.)(\d+)(</string>)"  # noqa: E501
@@ -156,16 +186,16 @@ class VersionReleaser:
         self,
         new_client_version: Version,
         new_server_version: Version,
-        release_date: datetime.date,
+        release_date: date,
         update_versions: bool,
     ) -> None:
         self.new_client_version = new_client_version
         self.new_server_version = new_server_version
         self._progress_version = None
         self.release_date = release_date
-        self._released_versions = None
+        self._released_versions: Optional[list[tuple[Version, date]]] = None
         self.update_versions = update_versions
-        self.errors = []
+        self.errors: list[Any] = []
 
     def run_with_check(self, args: List[str]) -> None:
         """
@@ -195,7 +225,7 @@ class VersionReleaser:
         return self._progress_version
 
     @property
-    def released_versions(self) -> List[Tuple[Version, datetime]]:
+    def released_versions(self) -> List[Tuple[Version, date]]:
         """
         Returns a list of ``(version, date_released)`` tuples from the
         changelog.
@@ -205,7 +235,7 @@ class VersionReleaser:
 
         return self._released_versions
 
-    def _get_released_versions(self) -> List[Tuple[Version, datetime]]:
+    def _get_released_versions(self) -> List[Tuple[Version, date]]:
         regex = r"^\*\*.*(\d+)\.(\d+)\.(\d+).*released\s+(\d+)\s+([a-zA-Z]+)\s+(\d+).*\*\*$"  # noqa: E501
 
         released_versions = []
@@ -254,7 +284,7 @@ class VersionReleaser:
             "Could not find version in camcopsversion.cpp"
         )
 
-    def get_client_date(self) -> datetime:
+    def get_client_date(self) -> date:
         """
         Return the client changedate, from ``camcopsversion.cpp``, or raise.
         """
@@ -343,7 +373,7 @@ class VersionReleaser:
 
         raise MissingVersionException("Could not find version in Info.plist")
 
-    def check_quick_links(self) -> None:
+    def check_quick_link_years(self) -> None:
         ref_regex = r"- :ref:`(\d{4}) <changelog_(\d{4})>`$"
         refs = []
 
@@ -406,6 +436,54 @@ class VersionReleaser:
                     "Mismatch between :ref: years, target years "
                     "and year headings"
                 )
+
+    def check_quick_link_versions(self) -> None:
+        ref_regex = r"- :ref:`v(\d+\.\d+\.\d+) <changelog_v(\d+\.\d+\.\d+)>`$"
+        refs = []
+
+        with open(CHANGELOG, "r") as f:
+            for line in f.readlines():
+                m = re.match(ref_regex, line)
+                if m is not None:
+                    refs.append((Version(m.group(1)), Version(m.group(2))))
+
+        if (self.release_version, self.release_version) not in refs:
+            self.errors.append(
+                f"No :ref: for {self.release_version} in changelog"
+            )
+
+        target_regex = r"\.\. _changelog_v(\d+\.\d+\.\d+)\:$"
+
+        targets = []
+
+        with open(CHANGELOG, "r") as f:
+            for line in f.readlines():
+                m = re.match(target_regex, line)
+                if m is not None:
+                    target_version = Version(m.group(1))
+                    if (target_version, target_version) not in refs:
+                        self.errors.append(
+                            f"No :ref: for version {target_version} "
+                            "in changelog"
+                        )
+                    targets.append((target_version, target_version))
+
+        versions = []
+        for version, release_date in self.released_versions:
+            versions.append((version, version))
+
+        if targets != refs or versions != refs:
+            self.errors.append(":ref: versions:")
+            self.errors.append([r[0] for r in refs])
+            self.errors.append("target versions:")
+            self.errors.append([t[0] for t in targets])
+            self.errors.append("released versions:")
+            self.errors.append([v[0] for v in versions])
+
+            self.errors.append(
+                "Mismatch between :ref: versions, target versions "
+                "and version headings"
+            )
 
     def check_server_version(self) -> None:
         if self.new_server_version == self.progress_version:
@@ -605,6 +683,190 @@ class VersionReleaser:
             f"({self.new_client_version})"
         )
 
+    def check_android_releases_table(self) -> None:
+        releases = self.get_android_releases()
+
+        if not self.should_release_client:
+            # Not updating the client but there should be a N/A entry for the
+            # server version in the CSV table of releases included in the
+            # developer documentation.
+            if releases[-1]["version"] == self.new_server_version:
+                return
+
+            if self.update_versions:
+                return self.append_to_releases_table(self.new_server_version)
+
+            return self.errors.append(
+                f"No 'N/A' entry for {self.new_server_version} in the Android "
+                "releases table (included in the developer documentation)"
+            )
+
+        if releases[-1]["version"] == self.new_client_version:
+            return
+
+        next_32_bit_version_code = releases[-1]["code_32_bit"] + 2
+        next_64_bit_version_code = releases[-1]["code_64_bit"] + 2
+
+        if self.update_versions:
+            version_code_string = (
+                f"{next_32_bit_version_code} (32-bit ARM); "
+                f"{next_64_bit_version_code} (64-bit ARM)"
+            )
+
+            return self.append_to_releases_table(
+                self.new_client_version,
+                version_code_string=version_code_string,
+                version_name=self.new_client_version,
+                release_date_string=self.release_date.strftime("%Y-%m-%d"),
+                minimum_android_api=23,
+                target_android_api=34,  # As of 2024-08-31
+            )
+
+        self.errors.append(
+            f"No entry for {self.new_client_version} in the Android "
+            "releases table (included in the developer documentation)"
+        )
+
+    def append_to_releases_table(
+        self,
+        release_name: Version,
+        version_code_string: str = "N/A, server only",
+        version_name: Union[Version, str] = "N/A",
+        release_date_string: str = "N/A",
+        minimum_android_api: Union[int, str] = "N/A",
+        target_android_api: Union[int, str] = "N/A",
+    ) -> None:
+        with open(PLAY_STORE_RELEASE_HISTORY_FILE, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(
+                [
+                    release_name,
+                    version_code_string,
+                    version_name,
+                    release_date_string,
+                    minimum_android_api,
+                    target_android_api,
+                ]
+            )
+
+    def check_android_32_bit_version_code(self) -> None:
+        if not self.should_release_client:
+            return
+
+        releases = self.get_android_releases()
+        latest_32_bit_version_code = releases[-1]["code_32_bit"]
+
+        if releases[-1]["version"] == self.new_client_version:
+            next_32_bit_version_code = latest_32_bit_version_code
+        else:
+            next_32_bit_version_code = latest_32_bit_version_code + 2
+
+        current_32_bit_version_code = self.get_android_32_bit_version_code()
+
+        if current_32_bit_version_code == next_32_bit_version_code:
+            return
+
+        if self.update_versions:
+            return self.update_file(
+                PROJECT_FILE,
+                self.android_32_bit_version_code_search,
+                self.android_32_bit_version_code_replace.format(
+                    code_32_bit=next_32_bit_version_code,
+                ),
+            )
+
+        return self.errors.append(
+            f"The 32-bit version code ({current_32_bit_version_code}) in "
+            f"camcops.pro should be {next_32_bit_version_code}"
+        )
+
+    def get_android_32_bit_version_code(self) -> int:
+        with open(PROJECT_FILE, "r") as f:
+            m = re.search(self.android_32_bit_version_code_search, f.read())
+            if m is not None:
+                return int(m.group(2))
+
+        raise MissingCodeException(
+            "Could not 32-bit version code in camcops.pro"
+        )
+
+    def check_android_64_bit_version_code(self) -> None:
+        if not self.should_release_client:
+            return
+
+        releases = self.get_android_releases()
+        latest_64_bit_version_code = releases[-1]["code_64_bit"]
+
+        if releases[-1]["version"] == self.new_client_version:
+            next_64_bit_version_code = latest_64_bit_version_code
+        else:
+            next_64_bit_version_code = latest_64_bit_version_code + 2
+
+        current_64_bit_version_code = self.get_android_64_bit_version_code()
+
+        if current_64_bit_version_code == next_64_bit_version_code:
+            return
+
+        if self.update_versions:
+            return self.update_file(
+                PROJECT_FILE,
+                self.android_64_bit_version_code_search,
+                self.android_64_bit_version_code_replace.format(
+                    code_64_bit=next_64_bit_version_code,
+                ),
+            )
+
+        return self.errors.append(
+            f"The 64-bit version code ({current_64_bit_version_code}) in "
+            f"camcops.pro should be {next_64_bit_version_code}"
+        )
+
+    def get_android_64_bit_version_code(self) -> int:
+        with open(PROJECT_FILE, "r") as f:
+            m = re.search(self.android_64_bit_version_code_search, f.read())
+            if m is not None:
+                return int(m.group(2))
+
+        raise MissingCodeException(
+            "Could not 64-bit version code in camcops.pro"
+        )
+
+    def get_android_releases(self) -> List[Dict[str, Any]]:
+        releases = []
+
+        code_32_bit = 0
+        code_64_bit = 0
+
+        with open(PLAY_STORE_RELEASE_HISTORY_FILE, newline="") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    version = Version(row["AndroidManifest.xml name"])
+                except ValueError:
+                    try:
+                        version = Version(
+                            row["Google Play Store release name"]
+                        )
+                    except ValueError:
+                        version = ""
+
+                m = re.match(
+                    self.android_version_codes_table_search,
+                    row["AndroidManifest.xml version code"],
+                )
+                if m is not None:
+                    code_32_bit = int(m.group(1))
+                    code_64_bit = int(m.group(3))
+
+                releases.append(
+                    dict(
+                        version=version,
+                        code_32_bit=code_32_bit,
+                        code_64_bit=code_64_bit,
+                    )
+                )
+            return releases
+
     def update_file(self, filename: str, search: str, replace: str) -> None:
         print(f"Updating {filename}...")
         with open(filename, "r") as f:
@@ -680,7 +942,8 @@ class VersionReleaser:
                 f"({latest_date}) does not match '{self.release_date}'"
             )
 
-        self.check_quick_links()
+        self.check_quick_link_years()
+        self.check_quick_link_versions()
 
         self.check_server_version()
         if self.should_release_server:
@@ -694,6 +957,10 @@ class VersionReleaser:
         self.check_android_version()
         self.check_ios_short_version()
         self.check_ios_version()
+
+        self.check_android_releases_table()
+        self.check_android_32_bit_version_code()
+        self.check_android_64_bit_version_code()
 
         if len(self.errors) == 0:
             self.check_docs()
@@ -723,7 +990,7 @@ class VersionReleaser:
                     )
 
     def rebuild_docs(self) -> None:
-        self.run_with_check([REBUILD_DOCS])
+        self.run_with_check([REBUILD_DOCS, "--warnings_as_errors"])
 
     def release(self) -> None:
         if self.should_release_server:
@@ -737,12 +1004,19 @@ class VersionReleaser:
             # Currenly fhirclient is on a fork
             self.run_with_check(["python", "setup.py", "sdist"])
             pypi_packages = [str(f) for f in self.get_pypi_builds()]
-            print("Uploading to PyPI...")
+            print(
+                "Uploading to PyPI. You will need an API token from "
+                "https://pypi.org/manage/account/. If prompted for username "
+                "and password, enter '__token__' as the username and the API "
+                "token (long string beginning with pypi-) as the password. "
+                "Alternatively you can store these details in ~/.pypirc. See "
+                "https://packaging.python.org/en/latest/specifications/pypirc/"
+                "..."
+            )
             self.run_with_check(["twine", "upload"] + pypi_packages)
 
-            # TODO: It takes some time so change this message:
             print(
-                "A new release should have been created on GitHub with the "
+                "A new release will be created on GitHub with the "
                 ".rpm and .deb files attached. They are also in "
                 f"{SERVER_PACKAGE_DIR}"
             )
@@ -808,7 +1082,7 @@ def main() -> None:
     This is a work in progress
     What do we want this script to do?
 
-    / Check and update all the version numbers (TODO: Android releases doc)
+    / Check and update all the version numbers
     / Check the changelog
     / Check the Git repository
     / Build the Ubuntu server packages (deb/rpm)
@@ -837,25 +1111,25 @@ def main() -> None:
         formatter_class=ArgumentDefaultsRichHelpFormatter,
     )
     parser.add_argument(
-        "--client-version",
+        "--client_version",
         type=str,
         required=True,
         help="New client version number (x.y.z)",
     )
     parser.add_argument(
-        "--server-version",
+        "--server_version",
         type=str,
         required=True,
         help="New server version number (x.y.z)",
     )
     parser.add_argument(
-        "--release-date",
+        "--release_date",
         type=valid_date,
         default=datetime.now().date(),
         help="Release date (YYYY-MM-DD)",
     )
     parser.add_argument(
-        "--update-versions",
+        "--update_versions",
         action="store_true",
         default=False,
         help="Update any incorrect version numbers",
@@ -883,7 +1157,7 @@ def main() -> None:
             # TODO: Don't display this message if the versions are already
             # updated
             print(
-                "Run the script with --update-versions to automatically "
+                "Run the script with --update_versions to automatically "
                 "update version numbers"
             )
         sys.exit(EXIT_FAILURE)

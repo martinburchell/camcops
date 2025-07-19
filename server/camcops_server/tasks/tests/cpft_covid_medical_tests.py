@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/tasks/tests/cpft_covid_medical_tests.py
 
@@ -42,7 +40,7 @@ class CpftCovidMedicalTests(unittest.TestCase):
     def test_complete_when_all_answers_valid(self) -> None:
         task = CpftCovidMedical()
 
-        task.how_and_when_symptoms = 0
+        task.how_and_when_symptoms = 0  # type: ignore[attr-defined]
 
         self.assertTrue(task.is_complete())
 

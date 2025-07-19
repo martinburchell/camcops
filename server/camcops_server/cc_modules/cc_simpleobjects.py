@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_simpleobjects.py
 
@@ -30,7 +28,7 @@ camcops_server/cc_modules/cc_simpleobjects.py
 """
 
 import copy
-from typing import List, TYPE_CHECKING
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from pendulum import Date
 
@@ -82,7 +80,7 @@ class IdNumReference(object):
             and self.idnum_value > 0
         )
 
-    def __eq__(self, other: "IdNumReference") -> bool:
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, IdNumReference):
             return False
         return (
@@ -99,6 +97,7 @@ class IdNumReference(object):
 # =============================================================================
 # HL7PatientIdentifier
 # =============================================================================
+
 
 # noinspection PyShadowingBuiltins
 class HL7PatientIdentifier(object):
@@ -137,7 +136,7 @@ class BarePatientInfo(object):
         forename: str = None,
         surname: str = None,
         sex: str = None,
-        dob: Date = None,
+        dob: Optional[Date] = None,
         address: str = None,
         email: str = None,
         gp: str = None,
@@ -187,7 +186,7 @@ class BarePatientInfo(object):
         """
         self.idnum_definitions.append(idref)
 
-    def __eq__(self, other: "BarePatientInfo") -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Do all data elements match those of ``other``?
         """
@@ -216,7 +215,7 @@ class XmlSimpleValue(object):
     Represents XML lowest-level items. See functions in ``cc_xml.py``.
     """
 
-    def __init__(self, value) -> None:
+    def __init__(self, value: Any) -> None:
         self.value = value
 
 

@@ -19,34 +19,36 @@
 */
 
 #pragma once
-#include "db/fieldref.h"
+#include "common/aliases_camcops.h"
 #include "questionnairelib/qumeasurement.h"
-#include "questionnairelib/qulineeditdouble.h"
-#include "questionnairelib/qulineeditinteger.h"
 #include "questionnairelib/quunitselector.h"
 
 class QuMass : public QuMeasurement
 {
     // Mass in kilograms question type with imperial conversion
     Q_OBJECT
+
 public:
-    QuMass(FieldRefPtr fieldref, QPointer<QuUnitSelector> unit_selector,
-           bool mandatory = true);
+    QuMass(
+        FieldRefPtr fieldref,
+        QPointer<QuUnitSelector> unit_selector,
+        bool mandatory = true
+    );
     void setUpFields();
 
-
-public slots:
     QVariant getKg() const;
     QVariant getSt() const;
     QVariant getLb() const;
     QVariant getOz() const;
+
+public slots:
     bool setKg(const QVariant& value);
     bool setSt(const QVariant& value);
     bool setLb(const QVariant& value);
     bool setOz(const QVariant& value);
 
 protected:
-    virtual FieldRefPtrList getMetricFieldrefs() const ;
+    virtual FieldRefPtrList getMetricFieldrefs() const;
     virtual FieldRefPtrList getImperialFieldrefs() const;
 
     QVariant m_st;

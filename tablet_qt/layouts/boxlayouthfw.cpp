@@ -18,6 +18,14 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+/*
+    OPTIONAL LGPL: Alternatively, this file may be used under the terms of the
+    GNU Lesser General Public License version 3 as published by the Free
+    Software Foundation. You should have received a copy of the GNU Lesser
+    General Public License along with CamCOPS. If not, see
+    <https://www.gnu.org/licenses/>.
+*/
+
 // From qboxlayout.cpp:
 /* ============================================================================
 **
@@ -68,6 +76,7 @@
 #include "boxlayouthfw.h"
 #include <QApplication>
 #include <QDebug>
+#include <QHash>
 #include <QList>
 #include <QSizePolicy>
 #include <QSpacerItem>
@@ -79,9 +88,6 @@
 #include "lib/reentrydepthguard.h"
 #include "lib/sizehelpers.h"
 
-#ifdef BOXLAYOUTHFW_ALTER_FROM_QBOXLAYOUT
-#include "common/globals.h"  // for qHash(const QRect&)
-#endif
 
 using qtlayouthelpers::checkLayout;
 using qtlayouthelpers::checkWidget;
@@ -1510,7 +1516,7 @@ QRect BoxLayoutHfw::getContentsRect(const QRect& layout_rect) const
     const QRect cr = alignment() ? alignmentRect(r) : r;
     // RNC: ... if there is no alignment, cr is the same as r (meaning that we
     // fill our entire space), but if there is an alignment,  we alter our
-    // rectangle; see http://doc.qt.io/qt-5/qlayout.html#alignmentRect
+    // rectangle; see https://doc.qt.io/qt-6.5/qlayout.html#alignmentRect
 
     // Margins effmarg = getEffectiveMargins();
     // QRect s(cr.x() + effmarg.left(), cr.y() + effmarg.top(),

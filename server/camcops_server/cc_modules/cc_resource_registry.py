@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/cc_modules/cc_resource_registry.py
 
@@ -29,12 +27,13 @@ camcops_server/cc_modules/cc_resource_registry.py
 
 """
 
+from typing import Any
 
 from deform.widget import ResourceRegistry
 
 
 class CamcopsResourceRegistry(ResourceRegistry):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.set_js_resources(

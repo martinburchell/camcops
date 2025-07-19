@@ -39,6 +39,7 @@ All tasks
     aims.rst
     apeqpt.rst
     apeq_cpft_perinatal.rst
+    aq.rst
     asdas.rst
     audit.rst
     badls.rst
@@ -55,6 +56,7 @@ All tasks
     cbir.rst
     cecaq3.rst
     cesd.rst
+    cet.rst
     cgi.rst
     cgisch.rst
     chit.rst
@@ -76,6 +78,7 @@ All tasks
     distressthermometer.rst
     edeq.rst
     elixhauserci.rst
+    empsa.rst
     epds.rst
     eq5d5l.rst
     esspri.rst

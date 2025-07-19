@@ -17,8 +17,8 @@
 #   along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 
 
-# http://doc.qt.io/qt-5/qmake-project-files.html
-# http://doc.qt.io/qt-5/qmake-variable-reference.html
+# https://doc.qt.io/qt-6.5/qmake-project-files.html
+# https://doc.qt.io/qt-6.5/qmake-variable-reference.html
 
 message("+++ CamCOPS qmake starting.")
 
@@ -34,8 +34,8 @@ message("+++ CamCOPS qmake starting.")
 # Use $(...) to read an environment variable at the time of make.
 # Use $$... or $${...} to read a Qt project file variable.
 # See
-# - http://doc.qt.io/qt-4.8/qmake-advanced-usage.html#variables
-# - http://doc.qt.io/qt-5/qmake-test-function-reference.html
+# - https://doc.qt.io/qt-6.5/qmake-advanced-usage.html#variables
+# - https://doc.qt.io/qt-6.5/qmake-test-function-reference.html
 # Here, we copy an environment variable to a Qt project file variable:
 # QT_BASE_DIR = $(CAMCOPS_QT6_BASE_DIR)  # value at time of make
 
@@ -73,10 +73,10 @@ message("... QT_ARCH: $${QT_ARCH}")
 # ALSO TRY:
 #   qmake -query  # for the qmake of the Qt build you're using
 
-# http://doc.qt.io/qt-5/qtmultimedia-index.html
+# https://doc.qt.io/qt-6.5/qtmultimedia-index.html
 # http://wiki.qt.io/Qt_5.5.0_Multimedia_Backends
-# http://doc.qt.io/qt-4.8/qmake-variable-reference.html#qt
-# http://doc.qt.io/qt-5/qtmodules.html
+# https://doc.qt.io/qt-6.5/qmake-variable-reference.html#qt
+# https://doc.qt.io/qt-6.5/qtmodules.html
 
 QT += core  # included by default; QtCore module
 QT += gui  # included by default; QtGui module
@@ -131,7 +131,7 @@ MOBILITY =
 # ... http://stackoverflow.com/questions/14681012/how-to-include-openssl-in-a-qt-project
 # ... but no effect? Not mentioned in variable reference (above).
 # ... ah, here's the reference:
-#     http://doc.qt.io/qt-5/qmake-project-files.html
+#     https://doc.qt.io/qt-6.5/qmake-project-files.html
 # LIBS += -lssl
 # ... not working either? Doesn't complain, but ldd still shows that system libssl.so is in use
 
@@ -238,6 +238,15 @@ TEMPLATE = app
 EIGEN_VERSION_FILE = "$${CAMCOPS_SOURCE_ROOT}/eigen_version.txt"
 EIGEN_VERSION = $$cat($${EIGEN_VERSION_FILE})
 
+QT_VERSION_FILE = "$${CAMCOPS_SOURCE_ROOT}/qt_version.txt"
+QT_GIT_VERSION = $$cat($${QT_VERSION_FILE})
+QT_GIT_VERSION = $$replace(QT_GIT_VERSION, "v", "")
+QT_GIT_VERSION = $$replace(QT_GIT_VERSION, "-lts-lgpl", "")
+
+!equals(QT_GIT_VERSION, $$[QT_VERSION]) {
+    error("This version of CamCOPS should be built with '$${QT_GIT_VERSION}', not '$$[QT_VERSION]'")
+}
+
 INCLUDEPATH += "$${QT_BASE_DIR}/eigen/eigen-$${EIGEN_VERSION}"  # from which: <Eigen/...>
 # INCLUDEPATH += "$${QT_BASE_DIR}/armadillo/armadillo-7.950.0/include"  # from which: <armadillo>
 # INCLUDEPATH += "$${QT_BASE_DIR}/armadillo/armadillo-7.950.0/include/armadillo_bits"
@@ -293,20 +302,31 @@ android {
     # CAMCOPS_OPENSSL_LINKAGE = "static"
     CAMCOPS_OPENSSL_LINKAGE = "dynamic"
 
+    CAMCOPS_32_BIT_VERSION_CODE = "51"
+    CAMCOPS_64_BIT_VERSION_CODE = "52"
+
     contains(ANDROID_TARGET_ARCH, x86) {
-        message("Building for Android/x86 (e.g. Android emulator)")
-        CAMCOPS_ARCH_TAG = "android_x86"
+        ANDROID_VERSION_CODE = $${CAMCOPS_32_BIT_VERSION_CODE}
+        message("Building for Android/x86_32 (e.g. Android emulator)")
+        CAMCOPS_ARCH_TAG = "android_x86_32"
+    }
+    contains(ANDROID_TARGET_ARCH, x86_64) {
+        ANDROID_VERSION_CODE = $${CAMCOPS_64_BIT_VERSION_CODE}
+        message("Building for Android/x86_64 (e.g. Android emulator)")
+        CAMCOPS_ARCH_TAG = "android_x86_64"
     }
     contains(ANDROID_TARGET_ARCH, armeabi-v7a) {
+        ANDROID_VERSION_CODE = $${CAMCOPS_32_BIT_VERSION_CODE}
         message("Building for Android/ARMv7 32-bit architecture")
         CAMCOPS_ARCH_TAG = "android_armv7"
     }
     contains(ANDROID_TARGET_ARCH, arm64-v8a) {
+        ANDROID_VERSION_CODE = $${CAMCOPS_64_BIT_VERSION_CODE}
         message("Building for Android/ARMv8 64-bit architecture")
         CAMCOPS_ARCH_TAG = "android_armv8_64"
     }
 
-    # http://doc.qt.io/qt-5/deployment-android.html#android-specific-qmake-variables
+    # https://doc.qt.io/qt-6.5/deployment-android.html#android-specific-qmake-variables
     ANDROID_PACKAGE_SOURCE_DIR = "$${CAMCOPS_SOURCE_ROOT}/android"
     message("ANDROID_PACKAGE_SOURCE_DIR: $${ANDROID_PACKAGE_SOURCE_DIR}")
     # ... contains things like AndroidManifest.xml
@@ -393,6 +413,10 @@ ios {
     QMAKE_ASSET_CATALOGS = $${CAMCOPS_SOURCE_ROOT}/ios/Images.xcassets
     QMAKE_ASSET_CATALOGS_APP_ICON = "AppIcon"
 }
+macos {
+    QMAKE_INFO_PLIST = $${CAMCOPS_SOURCE_ROOT}/macos/Info.plist
+}
+
 
 isEmpty(CAMCOPS_ARCH_TAG) {
     error("Unknown architecture; don't know how to build CamCOPS")
@@ -405,7 +429,7 @@ isEmpty(CAMCOPS_ARCH_TAG) {
 # To have the linker show its working:
 # LIBS += "-Wl,--verbose"
 
-equals(CAMCOPS_QT_LINKAGE, "static") {  # http://doc.qt.io/qt-5/qmake-test-function-reference.html
+equals(CAMCOPS_QT_LINKAGE, "static") {  # https://doc.qt.io/qt-6.5/qmake-test-function-reference.html
     message("Using static linkage from CamCOPS to Qt")
     CONFIG += static
 } else:equals(CAMCOPS_QT_LINKAGE, "dynamic") {
@@ -522,8 +546,8 @@ equals(CAMCOPS_OPENSSL_LINKAGE, "static") {
 }
 # Regardless of how *CamCOPS* talks to OpenSSL, under Android *Qt* talks to
 # it dynamically:
-ANDROID_EXTRA_LIBS += "$${OPENSSL_DIR}/libcrypto$${DYNAMIC_LIB_EXT}"  # needed for Qt
-ANDROID_EXTRA_LIBS += "$${OPENSSL_DIR}/libssl$${DYNAMIC_LIB_EXT}"
+ANDROID_EXTRA_LIBS += "$${OPENSSL_DIR}/libcrypto_3$${DYNAMIC_LIB_EXT}"  # needed for Qt
+ANDROID_EXTRA_LIBS += "$${OPENSSL_DIR}/libssl_3$${DYNAMIC_LIB_EXT}"
 # ... must start "lib" and end ".so", otherwise Qt complains.
 
 
@@ -564,7 +588,6 @@ SOURCES += \
     common/cssconst.cpp \
     common/dbconst.cpp \
     common/dpi.cpp \
-    common/globals.cpp \
     common/platform.cpp \
     common/textconst.cpp \
     common/uiconst.cpp \
@@ -646,12 +669,14 @@ SOURCES += \
     lib/containers.cpp \
     lib/convert.cpp \
     lib/css.cpp \
+    lib/customtypes.cpp \
     lib/datetime.cpp \
     lib/debugfunc.cpp \
+    lib/diagnosticstyle.cpp \
+    lib/errorfunc.cpp \
     lib/filefunc.cpp \
     lib/flagguard.cpp \
     lib/idpolicy.cpp \
-    lib/errorfunc.cpp \
     lib/layoutdumper.cpp \
     lib/margins.cpp \
     lib/nhs.cpp \
@@ -694,6 +719,7 @@ SOURCES += \
     menu/globalmenu.cpp \
     menu/helpmenu.cpp \
     menu/mainmenu.cpp \
+    menu/neurodiversitymenu.cpp \
     menu/patientsummarymenu.cpp \
     menu/personalitymenu.cpp \
     menu/physicalillnessmenu.cpp \
@@ -755,6 +781,7 @@ SOURCES += \
     qobjects/threadworker.cpp \
     qobjects/urlhandler.cpp \
     qobjects/urlvalidator.cpp \
+    qobjects/widgetpositioner.cpp \
     questionnairelib/commonoptions.cpp \
     questionnairelib/dynamicquestionnaire.cpp \
     questionnairelib/mcqfunc.cpp \
@@ -836,6 +863,7 @@ SOURCES += \
     tasks/aims.cpp \
     tasks/apeqcpftperinatal.cpp \
     tasks/apeqpt.cpp \
+    tasks/aq.cpp \
     tasks/asdas.cpp \
     tasks/audit.cpp \
     tasks/auditc.cpp \
@@ -854,6 +882,7 @@ SOURCES += \
     tasks/cecaq3.cpp \
     tasks/cesd.cpp \
     tasks/cesdr.cpp \
+    tasks/cet.cpp \
     tasks/cgi.cpp \
     tasks/cgii.cpp \
     tasks/cgisch.cpp \
@@ -881,6 +910,7 @@ SOURCES += \
     tasks/distressthermometer.cpp \
     tasks/edeq.cpp \
     tasks/elixhauserci.cpp \
+    tasks/empsa.cpp \
     tasks/epds.cpp \
     tasks/eq5d5l.cpp \
     tasks/esspri.cpp \
@@ -997,11 +1027,13 @@ SOURCES += \
     whisker/whiskerinboundmessage.cpp \
     whisker/whiskermanager.cpp \
     whisker/whiskeroutboundcommand.cpp \
+    whisker/whiskertypes.cpp \
     whisker/whiskerworker.cpp \
     widgets/adjustablepie.cpp \
     widgets/aspectratiopixmap.cpp \
     widgets/basewidget.cpp \
     widgets/booleanwidget.cpp \
+    widgets/cameraqcamera.cpp \
     widgets/cameraqml.cpp \
     widgets/canvaswidget.cpp \
     widgets/clickablelabel.cpp \
@@ -1047,7 +1079,6 @@ HEADERS += \
     common/dbconst.h \
     common/design_defines.h \
     common/dpi.h \
-    common/globals.h \
     common/gui_defines.h \
     common/platform.h \
     common/preprocessor_aid.h \
@@ -1134,8 +1165,10 @@ HEADERS += \
     lib/containers.h \
     lib/convert.h \
     lib/css.h \
+    lib/customtypes.h \
     lib/datetime.h \
     lib/debugfunc.h \
+    lib/diagnosticstyle.h \
     lib/errorfunc.h \
     lib/filefunc.h \
     lib/flagguard.h \
@@ -1186,6 +1219,7 @@ HEADERS += \
     menu/globalmenu.h \
     menu/helpmenu.h \
     menu/mainmenu.h \
+    menu/neurodiversitymenu.h \
     menu/patientsummarymenu.h \
     menu/personalitymenu.h \
     menu/physicalillnessmenu.h \
@@ -1246,6 +1280,7 @@ HEADERS += \
     qobjects/threadworker.h \
     qobjects/urlhandler.h \
     qobjects/urlvalidator.h \
+    qobjects/widgetpositioner.h \
     questionnairelib/commonoptions.h \
     questionnairelib/dynamicquestionnaire.h \
     questionnairelib/mcqfunc.h \
@@ -1327,6 +1362,7 @@ HEADERS += \
     tasks/aims.h \
     tasks/apeqcpftperinatal.h \
     tasks/apeqpt.h \
+    tasks/aq.h \
     tasks/asdas.h \
     tasks/audit.h \
     tasks/auditc.h \
@@ -1345,6 +1381,7 @@ HEADERS += \
     tasks/cecaq3.h \
     tasks/cesd.h \
     tasks/cesdr.h \
+    tasks/cet.h \
     tasks/cgi.h \
     tasks/cgii.h \
     tasks/cgisch.h \
@@ -1372,6 +1409,7 @@ HEADERS += \
     tasks/distressthermometer.h \
     tasks/edeq.h \
     tasks/elixhauserci.h \
+    tasks/empsa.h \
     tasks/epds.h \
     tasks/eq5d5l.h \
     tasks/esspri.h \
@@ -1488,11 +1526,13 @@ HEADERS += \
     whisker/whiskerinboundmessage.h \
     whisker/whiskermanager.h \
     whisker/whiskeroutboundcommand.h \
+    whisker/whiskertypes.h \
     whisker/whiskerworker.h \
     widgets/adjustablepie.h \
     widgets/aspectratiopixmap.h \
     widgets/basewidget.h \
     widgets/booleanwidget.h \
+    widgets/cameraqcamera.h \
     widgets/cameraqml.h \
     widgets/canvaswidget.h \
     widgets/clickablelabel.h \
@@ -1569,3 +1609,9 @@ TRANSLATIONS = \
     translations/camcops_da_DK.ts
 
 message("--- CamCOPS qmake finishing.")
+
+DISTFILES += \
+    common/README_licenses.txt \
+    layouts/README_licenses.txt \
+    lib/README_licenses.txt \
+    widgets/README_licenses.txt

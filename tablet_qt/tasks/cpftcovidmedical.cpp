@@ -18,14 +18,13 @@
     along with CamCOPS. If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include "cpftcovidmedical.h"
+
 #include <QPointer>
 #include <QString>
 #include <QStringList>
 #include <QVector>
 
-#include "cpftcovidmedical.h"
-
-#include "common/textconst.h"
 #include "core/camcopsapp.h"
 #include "db/databasemanager.h"
 #include "db/databaseobject.h"
@@ -37,36 +36,34 @@
 #include "questionnairelib/qumcq.h"
 #include "questionnairelib/qupage.h"
 #include "questionnairelib/qutext.h"
-#include "tasklib/task.h"
 #include "tasklib/taskfactory.h"
 #include "tasklib/taskregistrar.h"
 
-const QString CPFTCovidMedical::CPFTCOVIDMEDICAL_TABLENAME(
-    "cpft_covid_medical");
+const QString CPFTCovidMedical::CPFTCOVIDMEDICAL_TABLENAME("cpft_covid_medical"
+);
 
 // Field names
 const QString FN_HOW_AND_WHEN_SYMPTOMS("how_and_when_symptoms");
 
 const QString Q_XML_PREFIX = "q_";
 
-
 void initializeCPFTCovidMedical(TaskFactory& factory)
 {
     static TaskRegistrar<CPFTCovidMedical> registered(factory);
 }
 
-
 CPFTCovidMedical::CPFTCovidMedical(
-        CamcopsApp& app, DatabaseManager& db, const int load_pk) :
-    Task(app, db, CPFTCOVIDMEDICAL_TABLENAME,
-         false, false, false),  // ... anon, clin, resp
+    CamcopsApp& app, DatabaseManager& db, const int load_pk
+) :
+    Task(
+        app, db, CPFTCOVIDMEDICAL_TABLENAME, false, false, false
+    ),  // ... anon, clin, resp
     m_questionnaire(nullptr)
 {
     addField(FN_HOW_AND_WHEN_SYMPTOMS, QMetaType::fromType<int>());
 
     load(load_pk);  // MUST ALWAYS CALL from derived Task constructor.
 }
-
 
 // ============================================================================
 // Class info
@@ -77,18 +74,15 @@ QString CPFTCovidMedical::shortname() const
     return "CPFT_Covid_Medical";
 }
 
-
 QString CPFTCovidMedical::longname() const
 {
     return tr("CPFT Post-COVID-19 Clinic Medical Questionnaire");
 }
 
-
 QString CPFTCovidMedical::description() const
 {
     return tr("CPFT post-COVID-19 clinic medical questionnaire");
 }
-
 
 // ============================================================================
 // Instance info
@@ -103,15 +97,16 @@ bool CPFTCovidMedical::isComplete() const
     return true;
 }
 
-
 QStringList CPFTCovidMedical::summary() const
 {
     QStringList lines;
 
     const QString fmt = QString("%1: <b>%2</b><br>");
 
-    lines.append(fmt.arg(xstring(Q_XML_PREFIX + FN_HOW_AND_WHEN_SYMPTOMS),
-                         getHowAndWhenSymptomsAnswerText()));
+    lines.append(fmt.arg(
+        xstring(Q_XML_PREFIX + FN_HOW_AND_WHEN_SYMPTOMS),
+        getHowAndWhenSymptomsAnswerText()
+    ));
 
     return lines;
 }
@@ -125,25 +120,25 @@ QString CPFTCovidMedical::getHowAndWhenSymptomsAnswerText() const
     const int answer_int = valueInt(FN_HOW_AND_WHEN_SYMPTOMS);
 
     const QString fmt = QString("%1_option%2");
-    const QString answer_text = xstring(
-                fmt.arg(FN_HOW_AND_WHEN_SYMPTOMS).arg(answer_int));
+    const QString answer_text
+        = xstring(fmt.arg(FN_HOW_AND_WHEN_SYMPTOMS).arg(answer_int));
 
     return answer_text;
 }
-
 
 QStringList CPFTCovidMedical::detail() const
 {
     return completenessInfo() + summary();
 }
 
-
 OpenableWidget* CPFTCovidMedical::editor(const bool read_only)
 {
     QuPagePtr page(new QuPage);
     page->setTitle(description());
-    page->addElement((new QuText(xstring(
-        Q_XML_PREFIX + FN_HOW_AND_WHEN_SYMPTOMS)))->setBold(true));
+    page->addElement(
+        (new QuText(xstring(Q_XML_PREFIX + FN_HOW_AND_WHEN_SYMPTOMS)))
+            ->setBold(true)
+    );
     NameValueOptions options;
     for (int i = 0; i < 4; ++i) {
         const QString fmt = QString("%1_option%2");

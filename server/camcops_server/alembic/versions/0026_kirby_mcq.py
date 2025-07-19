@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 camcops_server/alembic/versions/0026_kirby_mcq.py
 
@@ -62,8 +60,9 @@ depends_on = None
 # The upgrade/downgrade steps
 # =============================================================================
 
+
 # noinspection PyPep8,PyTypeChecker
-def upgrade():
+def upgrade() -> None:
     op.create_table(
         "kirby_mcq",
         sa.Column(
@@ -618,6 +617,6 @@ def upgrade():
         )
 
 
-def downgrade():
+def downgrade() -> None:
     op.drop_table("kirby_mcq_trials")
     op.drop_table("kirby_mcq")
